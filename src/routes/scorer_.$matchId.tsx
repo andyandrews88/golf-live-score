@@ -521,7 +521,7 @@ function Scoring({ matchId, passcode }: { matchId: string; passcode: string }) {
               Undo last hole
             </Button>
           )}
-          {match.status === "live" && holes.length === 0 && !match.quick_updated_at && (
+          {match.status === "live" && holes.length === 0 && (
             <div className="text-center">
               {resetOpen ? (
                 <div className="rounded-lg border border-border bg-card p-4">

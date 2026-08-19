@@ -154,6 +154,9 @@ export const resetMatchToUpcoming = createServerFn({ method: "POST" })
         status: "upcoming",
         winner: null,
         result_text: null,
+        quick_thru: null,
+        quick_diff: null,
+        quick_updated_at: null,
         updated_at: new Date().toISOString(),
       })
       .eq("id", data.matchId)
