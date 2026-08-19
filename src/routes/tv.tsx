@@ -10,9 +10,7 @@ import {
   usePlayerProfile,
 } from "@/components/player-profile";
 import crest from "@/assets/crest.png";
-import course1 from "@/assets/course-1.jpg";
-import course2 from "@/assets/course-2.jpg";
-import course3 from "@/assets/course-3.jpg";
+import { useCoursePhotos } from "@/lib/course-photos";
 
 export const Route = createFileRoute("/tv")({
   head: () => ({
@@ -61,7 +59,6 @@ const DIVISION_LABEL: Record<string, string> = {
   bronze: "Ladies Bronze Cup",
 };
 
-const COURSE_PHOTOS = [course1, course2, course3];
 const PAGE_SIZE = 4;
 const PAGE_MS = 15000;
 const PHOTO_MS = 20000;
@@ -197,21 +194,27 @@ function TvCard({ match, holes }: { match: Match; holes: HoleResult[] }) {
 }
 
 function IdleScreen({ next }: { next: Match | undefined }) {
+  const { data: photos } = useCoursePhotos();
+  const slides = photos ?? [];
   const [i, setI] = useState(0);
   useEffect(() => {
-    const id = setInterval(() => setI((n) => (n + 1) % COURSE_PHOTOS.length), PHOTO_MS);
+    if (slides.length <= 1) {
+      setI(0);
+      return;
+    }
+    const id = setInterval(() => setI((n) => (n + 1) % slides.length), PHOTO_MS);
     return () => clearInterval(id);
-  }, []);
+  }, [slides.length]);
+
+  const current = slides[Math.min(i, Math.max(slides.length - 1, 0))];
 
   return (
     <div className="absolute inset-0">
-      {COURSE_PHOTOS.map((src, idx) => (
+      {slides.map((photo, idx) => (
         <img
-          key={src}
-          src={src}
+          key={photo.id}
+          src={photo.photo_url}
           alt=""
-          width={1920}
-          height={1080}
           className={cn(
             "absolute inset-0 size-full object-cover transition-opacity duration-1000",
             idx === i ? "opacity-100" : "opacity-0",
@@ -237,6 +240,11 @@ function IdleScreen({ next }: { next: Match | undefined }) {
         ) : (
           <p className="mt-6 font-headline text-5xl text-primary-foreground">
             No matches scheduled
+          </p>
+        )}
+        {current?.caption && (
+          <p className="absolute bottom-8 left-0 right-0 px-safe text-lg text-primary-foreground/70">
+            {current.caption}
           </p>
         )}
       </div>
