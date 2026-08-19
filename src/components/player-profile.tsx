@@ -145,6 +145,13 @@ function ProfileDialog({
           )}
           {mine.map((m) => {
             const opponent = (m.p1_name === name ? m.p2_name : m.p1_name) ?? "TBD";
+            const playerSlot = m.p1_name === name ? "p1" : m.p2_name === name ? "p2" : null;
+            const outcome =
+              m.status === "completed" && playerSlot && m.winner
+                ? m.winner === playerSlot
+                  ? "Won"
+                  : "Lost"
+                : null;
             return (
               <div key={m.id} className="rounded-lg border border-border bg-card p-3">
                 <div className="flex items-center justify-between gap-2">
@@ -165,11 +172,17 @@ function ProfileDialog({
                 <p className="mt-1 text-sm text-foreground">vs {opponent}</p>
                 <p className="text-xs text-muted-foreground">
                   {[m.date_label, m.tee_time].filter(Boolean).join(" · ")}
-                  {m.status === "completed" && m.result_text ? ` · ${m.result_text}` : ""}
+                  {m.status === "completed" && (
+                    <>
+                      {" · "}
+                      {outcome ? `${outcome} · ` : ""}
+                      {m.result_text ?? "Completed"}
+                    </>
+                  )}
                 </p>
               </div>
             );
-          })}
+          })
         </div>
       </DialogContent>
     </Dialog>
