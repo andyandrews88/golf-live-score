@@ -79,7 +79,7 @@ function PasscodeGate({ onUnlock }: { onUnlock: () => void }) {
     try {
       const { ok } = await verify({ data: { passcode } });
       if (ok) {
-        sessionStorage.setItem(SESSION_KEY, "1");
+        setScorerPasscode(passcode);
         onUnlock();
       } else {
         setError(true);
@@ -239,7 +239,7 @@ function ScorerPage() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    setUnlocked(sessionStorage.getItem(SESSION_KEY) === "1");
+    setUnlocked(Boolean(getScorerPasscode()));
     setReady(true);
   }, []);
 
