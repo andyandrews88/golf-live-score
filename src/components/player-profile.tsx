@@ -66,6 +66,7 @@ type MatchRow = {
   p2_seed: number | null;
   p2_hcp: number | null;
   result_text: string | null;
+  winner: string | null;
 };
 
 function statusLabel(status: string) {
