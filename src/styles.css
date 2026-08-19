@@ -158,5 +158,19 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
+    font-family: var(--font-body);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-headline);
   }
 }
+
+/* 15px minimum safe margin from screen edges on mobile */
+@utility px-safe {
+  padding-inline: max(var(--safe-margin), env(safe-area-inset-left), env(safe-area-inset-right));
+}
+
