@@ -29,6 +29,30 @@ export type Database = {
         }
         Relationships: []
       }
+      course_photos: {
+        Row: {
+          caption: string
+          display_order: number
+          id: string
+          photo_url: string
+          uploaded_at: string
+        }
+        Insert: {
+          caption?: string
+          display_order?: number
+          id?: string
+          photo_url: string
+          uploaded_at?: string
+        }
+        Update: {
+          caption?: string
+          display_order?: number
+          id?: string
+          photo_url?: string
+          uploaded_at?: string
+        }
+        Relationships: []
+      }
       hole_results: {
         Row: {
           created_at: string
