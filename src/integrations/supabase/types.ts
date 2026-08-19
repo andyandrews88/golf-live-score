@@ -79,6 +79,7 @@ export type Database = {
           p2_seed: number | null
           result_text: string | null
           round: string
+          sort_order: number | null
           status: string
           tee_time: string
           updated_at: string
@@ -101,6 +102,7 @@ export type Database = {
           p2_seed?: number | null
           result_text?: string | null
           round: string
+          sort_order?: number | null
           status?: string
           tee_time: string
           updated_at?: string
@@ -123,6 +125,7 @@ export type Database = {
           p2_seed?: number | null
           result_text?: string | null
           round?: string
+          sort_order?: number | null
           status?: string
           tee_time?: string
           updated_at?: string

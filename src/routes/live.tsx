@@ -63,8 +63,7 @@ async function fetchData() {
     supabase
       .from("matches")
       .select("*")
-      .order("match_date", { ascending: true })
-      .order("tee_time", { ascending: true }),
+      .order("sort_order", { ascending: true }),
     supabase.from("hole_results").select("match_id, result"),
   ]);
   if (matchesRes.error) throw matchesRes.error;

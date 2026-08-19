@@ -42,6 +42,7 @@ type Match = {
   date_label: string;
   tee_time: string;
   match_date: string;
+  sort_order: number | null;
   p1_name: string | null;
   p2_name: string | null;
   status: string;
@@ -122,9 +123,8 @@ function PasscodeGate({ onUnlock }: { onUnlock: () => void }) {
 async function fetchMatches() {
   const { data, error } = await supabase
     .from("matches")
-    .select("id, division, round, date_label, tee_time, match_date, p1_name, p2_name, status")
-    .order("match_date", { ascending: true })
-    .order("tee_time", { ascending: true });
+    .select("id, division, round, date_label, tee_time, match_date, sort_order, p1_name, p2_name, status")
+    .order("sort_order", { ascending: true });
   if (error) throw error;
   return (data ?? []) as Match[];
 }
