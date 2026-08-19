@@ -22,6 +22,7 @@ import {
   saveMatchComment,
   startMatch,
   undoLastHole,
+  undoMatchCompletion,
 } from "@/lib/scorer.functions";
 
 export const Route = createFileRoute("/scorer_/$matchId")({
@@ -150,11 +151,13 @@ function Scoring({ matchId, passcode }: { matchId: string; passcode: string }) {
   const complete = useServerFn(completeMatch);
   const saveComment = useServerFn(saveMatchComment);
   const resetToUpcoming = useServerFn(resetMatchToUpcoming);
+  const undoCompletion = useServerFn(undoMatchCompletion);
 
   const [busy, setBusy] = useState(false);
   const [decided, setDecided] = useState<{ winner: "p1" | "p2"; label: string } | null>(null);
   const [manualOpen, setManualOpen] = useState(false);
   const [resetOpen, setResetOpen] = useState(false);
+  const [undoCompleteOpen, setUndoCompleteOpen] = useState(false);
   const [manualWinner, setManualWinner] = useState<"p1" | "p2">("p1");
   const [manualLabel, setManualLabel] = useState("");
   const [comment, setComment] = useState<string | null>(null);
@@ -239,6 +242,19 @@ function Scoring({ matchId, passcode }: { matchId: string; passcode: string }) {
     }
   }
 
+  async function onUndoCompletion() {
+    if (busy) return;
+    setBusy(true);
+    try {
+      await undoCompletion({ data: { passcode, matchId } });
+      setUndoCompleteOpen(false);
+      setDecided(null);
+      await refresh();
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function onComplete(winner: "p1" | "p2", resultText: string) {
     setBusy(true);
     try {
@@ -269,6 +285,7 @@ function Scoring({ matchId, passcode }: { matchId: string; passcode: string }) {
   const p1 = match.p1_name ?? "Player 1";
   const p2 = match.p2_name ?? "Player 2";
   const completed = match.status === "completed";
+  const nextLocked = data?.nextLocked ?? false;
 
   return (
     <main className="min-h-screen bg-background px-safe pb-20">
