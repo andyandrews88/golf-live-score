@@ -203,6 +203,18 @@ function Scoring({ matchId, passcode }: { matchId: string; passcode: string }) {
     }
   }
 
+  async function onReset() {
+    if (busy) return;
+    setBusy(true);
+    try {
+      await resetToUpcoming({ data: { passcode, matchId } });
+      setResetOpen(false);
+      await refresh();
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function onComplete(winner: "p1" | "p2", resultText: string) {
     setBusy(true);
     try {
