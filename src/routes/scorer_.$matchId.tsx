@@ -18,6 +18,7 @@ import {
 import {
   completeMatch,
   recordHole,
+  resetMatchToUpcoming,
   saveMatchComment,
   startMatch,
   undoLastHole,
