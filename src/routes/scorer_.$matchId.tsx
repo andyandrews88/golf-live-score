@@ -369,7 +369,52 @@ function Scoring({ matchId, passcode }: { matchId: string; passcode: string }) {
         )}
       </section>
 
+      {completed && (
+        <div className="mx-auto mt-6 max-w-xl text-center">
+          {nextLocked ? (
+            <p className="text-xs text-muted-foreground">
+              Can't undo — the next match has already begun.
+            </p>
+          ) : undoCompleteOpen ? (
+            <div className="rounded-lg border border-border bg-card p-4 text-left">
+              <p className="text-sm text-foreground">
+                Undo completion and put this match back to Live? Recorded holes are kept.
+              </p>
+              <div className="mt-3 flex gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="flex-1"
+                  disabled={busy}
+                  onClick={onUndoCompletion}
+                >
+                  Yes, undo
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="flex-1"
+                  onClick={() => setUndoCompleteOpen(false)}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => setUndoCompleteOpen(true)}
+              className="text-xs text-muted-foreground underline underline-offset-4 hover:text-foreground disabled:opacity-50"
+            >
+              Undo completion
+            </button>
+          )}
+        </div>
+      )}
+
       {!completed && match.status === "upcoming" ? (
+
         <div className="mx-auto mt-6 max-w-xl">
           <Button size="lg" className="h-16 w-full text-lg" disabled={busy} onClick={onStart}>
             Start Match
