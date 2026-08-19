@@ -106,7 +106,7 @@ export type Database = {
           quick_updated_at: string | null
           result_text: string | null
           round: string
-          sort_order: number | null
+          sort_order: number
           status: string
           tee_time: string
           updated_at: string
@@ -132,7 +132,7 @@ export type Database = {
           quick_updated_at?: string | null
           result_text?: string | null
           round: string
-          sort_order?: number | null
+          sort_order: number
           status?: string
           tee_time: string
           updated_at?: string
@@ -158,7 +158,7 @@ export type Database = {
           quick_updated_at?: string | null
           result_text?: string | null
           round?: string
-          sort_order?: number | null
+          sort_order?: number
           status?: string
           tee_time?: string
           updated_at?: string
