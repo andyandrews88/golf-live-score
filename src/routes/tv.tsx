@@ -340,6 +340,7 @@ function TvBoard() {
   }, [live]);
 
   const [pageIndex, setPageIndex] = useState(0);
+  const [photoIndex, setPhotoIndex] = useState(0);
   useEffect(() => {
     if (pages.length <= 1) {
       setPageIndex(0);
