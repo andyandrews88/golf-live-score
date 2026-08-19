@@ -182,7 +182,7 @@ function ProfileDialog({
                 </p>
               </div>
             );
-          })
+          })}
         </div>
       </DialogContent>
     </Dialog>
