@@ -122,6 +122,7 @@ function Scoring({ matchId, passcode }: { matchId: string; passcode: string }) {
   const [manualWinner, setManualWinner] = useState<"p1" | "p2">("p1");
   const [manualLabel, setManualLabel] = useState("");
   const [comment, setComment] = useState<string | null>(null);
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
 
   const match = data?.match ?? null;
   const holes = data?.holes ?? [];
