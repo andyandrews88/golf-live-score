@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { verifyScorerPasscode } from "@/lib/scorer.functions";
+import { getScorerPasscode, setScorerPasscode } from "@/lib/scorer-session";
 
 export const Route = createFileRoute("/scorer")({
   head: () => ({
@@ -31,7 +32,7 @@ export const Route = createFileRoute("/scorer")({
   component: ScorerPage,
 });
 
-const SESSION_KEY = "rcgc-scorer-unlocked";
+
 const ROUND_ORDER = ["Round of 16", "Quarter-Final", "Semi-Final", "Final"];
 
 type Match = {
