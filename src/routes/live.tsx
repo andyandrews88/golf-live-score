@@ -5,6 +5,11 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  PlayerAvatar,
+  PlayerProfileProvider,
+  usePlayerProfile,
+} from "@/components/player-profile";
 
 export const Route = createFileRoute("/live")({
   head: () => ({
@@ -250,6 +255,14 @@ function MatchCard({ match, holes }: { match: Match; holes: HoleResult[] }) {
 }
 
 function LivePage() {
+  return (
+    <PlayerProfileProvider>
+      <LiveBoard />
+    </PlayerProfileProvider>
+  );
+}
+
+function LiveBoard() {
   const search = Route.useSearch();
   const [division, setDivision] = useState<string>(search.division);
 
