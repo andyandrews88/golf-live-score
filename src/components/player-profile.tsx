@@ -88,7 +88,7 @@ function ProfileDialog({
       const { data, error } = await supabase
         .from("matches")
         .select(
-          "id, division, round, status, date_label, tee_time, sort_order, p1_name, p1_seed, p1_hcp, p2_name, p2_seed, p2_hcp, result_text",
+          "id, division, round, status, date_label, tee_time, sort_order, p1_name, p1_seed, p1_hcp, p2_name, p2_seed, p2_hcp, result_text, winner",
         )
         .order("sort_order", { ascending: true });
       if (error) throw error;
