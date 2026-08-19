@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -329,11 +329,19 @@ function LiveBoard() {
 
   return (
     <main className="min-h-screen bg-background px-safe pb-16">
-      <header className="mx-auto max-w-3xl pt-8 pb-4">
-        <h1 className="font-headline text-3xl font-bold text-primary">
-          RCGC 105th Championship
-        </h1>
-        <p className="text-sm text-muted-foreground">Live leaderboard</p>
+      <header className="mx-auto flex max-w-3xl items-start justify-between pt-8 pb-4">
+        <div>
+          <h1 className="font-headline text-3xl font-bold text-primary">
+            RCGC 105th Championship
+          </h1>
+          <p className="text-sm text-muted-foreground">Live leaderboard</p>
+        </div>
+        <Link
+          to="/"
+          className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 font-headline text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+        >
+          Home
+        </Link>
       </header>
 
       <div className="mx-auto max-w-3xl">
