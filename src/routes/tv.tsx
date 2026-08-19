@@ -371,10 +371,18 @@ function TvBoard() {
 
   return (
     <main className="relative min-h-screen overflow-hidden text-primary-foreground">
-      <PhotoBackdrop onIndexChange={setPhotoIndex} />
-      {live.length === 0 && <IdleScreen next={nextUp} photoIndex={photoIndex} />}
+      <PhotoBackdrop
+        onIndexChange={setPhotoIndex}
+        scrim={hasLive ? (isBreather ? "none" : "light") : "heavy"}
+      />
+      {!hasLive && <IdleScreen next={nextUp} photoIndex={photoIndex} />}
 
-      <div className="relative flex min-h-screen flex-col px-safe py-6">
+      <div
+        className={cn(
+          "relative flex min-h-screen flex-col px-safe py-6",
+          isBreather && "pointer-events-none opacity-0",
+        )}
+      >
         <header className="flex items-center justify-between gap-6">
           <div className="flex items-center gap-4">
             <img src={crest} alt="" width={512} height={512} className="size-16 xl:size-20" />
