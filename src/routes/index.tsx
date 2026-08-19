@@ -3,9 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 
 import crest from "@/assets/crest.png";
-import course1 from "@/assets/course-1.jpg";
-import course2 from "@/assets/course-2.jpg";
-import course3 from "@/assets/course-3.jpg";
+import { useCoursePhotos } from "@/lib/course-photos";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/")({
@@ -30,7 +28,6 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-const PHOTOS = [course1, course2, course3];
 const PHOTO_MS = 5000;
 
 const DIVISIONS = [
@@ -125,22 +122,32 @@ function WeatherPanel() {
 }
 
 function Carousel() {
+  const { data } = useCoursePhotos();
+  const photos = data ?? [];
   const [index, setIndex] = useState(0);
   const touchX = useRef<number | null>(null);
 
   useEffect(() => {
-    const t = setInterval(() => setIndex((i) => (i + 1) % PHOTOS.length), PHOTO_MS);
+    if (photos.length <= 1) {
+      setIndex(0);
+      return;
+    }
+    const t = setInterval(() => setIndex((i) => (i + 1) % photos.length), PHOTO_MS);
     return () => clearInterval(t);
-  }, []);
+  }, [photos.length]);
 
   function onTouchEnd(e: React.TouchEvent) {
     const start = touchX.current;
     touchX.current = null;
-    if (start === null) return;
+    if (start === null || photos.length < 2) return;
     const dx = (e.changedTouches[0]?.clientX ?? start) - start;
     if (Math.abs(dx) < 40) return;
-    setIndex((i) => (i + (dx < 0 ? 1 : PHOTOS.length - 1)) % PHOTOS.length);
+    setIndex((i) => (i + (dx < 0 ? 1 : photos.length - 1)) % photos.length);
   }
+
+  if (photos.length === 0) return null;
+
+  const active = photos[Math.min(index, photos.length - 1)];
 
   return (
     <section className="mx-auto mt-6 w-full max-w-3xl">
@@ -151,11 +158,11 @@ function Carousel() {
         }}
         onTouchEnd={onTouchEnd}
       >
-        {PHOTOS.map((src, i) => (
+        {photos.map((photo, i) => (
           <img
-            key={src}
-            src={src}
-            alt="Royal Colombo Golf Club course view"
+            key={photo.id}
+            src={photo.photo_url}
+            alt={photo.caption || "Royal Colombo Golf Club course view"}
             loading={i === 0 ? "eager" : "lazy"}
             className={cn(
               "absolute inset-0 size-full object-cover transition-opacity duration-700",
@@ -163,11 +170,16 @@ function Carousel() {
             )}
           />
         ))}
+        {active?.caption && (
+          <p className="absolute inset-x-0 bottom-0 bg-primary/80 px-4 py-2 text-sm text-primary-foreground">
+            {active.caption}
+          </p>
+        )}
       </div>
       <div className="mt-3 flex justify-center gap-2">
-        {PHOTOS.map((src, i) => (
+        {photos.map((photo, i) => (
           <button
-            key={src}
+            key={photo.id}
             type="button"
             aria-label={`Show photo ${i + 1}`}
             onClick={() => setIndex(i)}
