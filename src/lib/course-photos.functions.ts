@@ -61,33 +61,6 @@ export const uploadCoursePhoto = createServerFn({ method: "POST" })
     return { ok: true as const, photoUrl: signed.signedUrl };
   });
 
-export const registerCoursePhoto = createServerFn({ method: "POST" })
-  .inputValidator((data: {
-    passcode: string;
-    path: string;
-    caption: string;
-    displayOrder: number;
-  }) => ({
-    passcode: String(data?.passcode ?? ""),
-    path: String(data?.path ?? ""),
-    caption: String(data?.caption ?? "").slice(0, 160),
-    displayOrder: Number(data?.displayOrder ?? 0),
-  }))
-  .handler(async ({ data }) => {
-    const supabaseAdmin = await assertPasscode(data.passcode);
-    const { data: signed, error: signErr } = await supabaseAdmin.storage
-      .from(BUCKET)
-      .createSignedUrl(data.path, TEN_YEARS);
-    if (signErr) throw signErr;
-    const { error } = await supabaseAdmin.from("course_photos").insert({
-      photo_url: signed.signedUrl,
-      caption: data.caption,
-      display_order: data.displayOrder,
-    });
-    if (error) throw error;
-    return { ok: true as const };
-  });
-
 export const updateCoursePhoto = createServerFn({ method: "POST" })
   .inputValidator((data: { passcode: string; id: string; caption?: string; displayOrder?: number }) => ({
     passcode: String(data?.passcode ?? ""),
