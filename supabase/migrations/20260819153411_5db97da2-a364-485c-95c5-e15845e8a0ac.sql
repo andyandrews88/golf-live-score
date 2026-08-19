@@ -1,0 +1,1 @@
+create policy "Player photos readable" on storage.objects for select to anon, authenticated using (bucket_id = 'player-photos');
