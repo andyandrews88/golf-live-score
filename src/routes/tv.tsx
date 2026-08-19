@@ -341,17 +341,24 @@ function TvBoard() {
     return out;
   }, [live]);
 
-  const [pageIndex, setPageIndex] = useState(0);
+  const [stepIndex, setStepIndex] = useState(0);
   const [photoIndex, setPhotoIndex] = useState(0);
+  const hasLive = live.length > 0;
+  // Steps = each page of matches, plus one trailing "breather" step (clear photo).
+  const stepCount = hasLive ? pages.length + 1 : 1;
   useEffect(() => {
-    if (pages.length <= 1) {
-      setPageIndex(0);
+    if (stepCount <= 1) {
+      setStepIndex(0);
       return;
     }
-    const id = setInterval(() => setPageIndex((i) => (i + 1) % pages.length), PAGE_MS);
+    setStepIndex(0);
+    const id = setInterval(() => setStepIndex((i) => (i + 1) % stepCount), PAGE_MS);
     return () => clearInterval(id);
-  }, [pages.length]);
+  }, [stepCount]);
 
+  const safeStep = Math.min(stepIndex, stepCount - 1);
+  const isBreather = hasLive && safeStep === pages.length;
+  const pageIndex = isBreather ? 0 : safeStep;
   const page = pages[Math.min(pageIndex, pages.length - 1)];
   const secondsAgo = dataUpdatedAt ? Math.max(0, Math.round((Date.now() - dataUpdatedAt) / 1000)) : null;
 
