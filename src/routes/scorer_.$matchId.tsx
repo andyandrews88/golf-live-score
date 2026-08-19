@@ -419,8 +419,15 @@ function Scoring({ matchId, passcode }: { matchId: string; passcode: string }) {
           onChange={(e) => setComment(e.target.value)}
           onBlur={async () => {
             if ((comment ?? "") === (match.comment ?? "")) return;
-            await saveComment({ data: { passcode, matchId, comment: comment ?? "" } });
-            await refresh();
+            setSaveStatus("saving");
+            try {
+              await saveComment({ data: { passcode, matchId, comment: comment ?? "" } });
+              await refresh();
+              setSaveStatus("saved");
+              window.setTimeout(() => setSaveStatus("idle"), 2000);
+            } catch {
+              setSaveStatus("error");
+            }
           }}
           className="mt-2"
           placeholder="e.g. Long putt on 7 to halve the hole"
