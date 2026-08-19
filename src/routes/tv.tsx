@@ -145,7 +145,7 @@ function PlayerLine({
 function TvCard({ match, holes }: { match: Match; holes: HoleResult[] }) {
   const score = computeScore(holes);
   return (
-    <article className="flex flex-col rounded-2xl border border-primary-foreground/15 bg-primary-foreground/5 p-6">
+    <article className="flex flex-col rounded-2xl border border-primary-foreground/20 bg-primary/85 p-6 shadow-2xl backdrop-blur-[2px]">
       <p className="font-headline text-lg uppercase tracking-widest text-secondary">
         {match.round} · {DIVISION_LABEL[match.division] ?? match.division}
       </p>
@@ -235,8 +235,10 @@ function IdleScreen({
 
 function PhotoBackdrop({
   onIndexChange,
+  dim = false,
 }: {
   onIndexChange?: (index: number) => void;
+  dim?: boolean;
 }) {
   const { data: photos } = useCoursePhotos();
   const slides = photos ?? [];
@@ -267,7 +269,7 @@ function PhotoBackdrop({
           )}
         />
       ))}
-      <div className="absolute inset-0 bg-primary/70" />
+      <div className={cn("absolute inset-0", dim ? "bg-primary/70" : "bg-primary/28")} />
     </div>
   );
 }
