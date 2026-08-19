@@ -243,7 +243,13 @@ function MatchCard({ match, holes }: { match: Match; holes: HoleResult[] }) {
 }
 
 function LivePage() {
-  const [division, setDivision] = useState<string>("all");
+  const search = Route.useSearch();
+  const [division, setDivision] = useState<string>(search.division);
+
+  useEffect(() => {
+    setDivision(search.division);
+  }, [search.division]);
+
   const { data, isLoading, error } = useLiveData();
 
   const holesByMatch = useMemo(() => {
