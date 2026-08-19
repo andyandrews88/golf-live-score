@@ -97,9 +97,9 @@ export const updateCoursePhoto = createServerFn({ method: "POST" })
   }))
   .handler(async ({ data }) => {
     const supabaseAdmin = await assertPasscode(data.passcode);
-    const patch: Record<string, unknown> = {};
-    if (data.caption !== undefined) patch["caption"] = data.caption;
-    if (data.displayOrder !== undefined) patch["display_order"] = data.displayOrder;
+    const patch: { caption?: string; display_order?: number } = {};
+    if (data.caption !== undefined) patch.caption = data.caption;
+    if (data.displayOrder !== undefined) patch.display_order = data.displayOrder;
     if (Object.keys(patch).length === 0) return { ok: true as const };
     const { error } = await supabaseAdmin.from("course_photos").update(patch).eq("id", data.id);
     if (error) throw error;
