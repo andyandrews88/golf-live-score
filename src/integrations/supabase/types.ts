@@ -101,6 +101,9 @@ export type Database = {
           p2_hcp: number | null
           p2_name: string | null
           p2_seed: number | null
+          quick_diff: number | null
+          quick_thru: number | null
+          quick_updated_at: string | null
           result_text: string | null
           round: string
           sort_order: number | null
@@ -124,6 +127,9 @@ export type Database = {
           p2_hcp?: number | null
           p2_name?: string | null
           p2_seed?: number | null
+          quick_diff?: number | null
+          quick_thru?: number | null
+          quick_updated_at?: string | null
           result_text?: string | null
           round: string
           sort_order?: number | null
@@ -147,6 +153,9 @@ export type Database = {
           p2_hcp?: number | null
           p2_name?: string | null
           p2_seed?: number | null
+          quick_diff?: number | null
+          quick_thru?: number | null
+          quick_updated_at?: string | null
           result_text?: string | null
           round?: string
           sort_order?: number | null
