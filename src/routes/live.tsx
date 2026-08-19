@@ -156,28 +156,35 @@ function PlayerRow({
   hcp: number | null;
   highlighted: boolean;
 }) {
+  const profile = usePlayerProfile();
   return (
-    <div
+    <button
+      type="button"
+      onClick={() => profile?.open(name)}
       className={cn(
-        "flex items-baseline justify-between gap-3 rounded-md px-2 py-1.5",
-        highlighted && "bg-secondary/40",
+        "flex w-full items-center justify-between gap-3 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-muted",
+        highlighted && "bg-secondary/40 hover:bg-secondary/50",
       )}
     >
-      <span
-        className={cn(
-          "font-headline text-lg leading-tight",
-          highlighted ? "font-bold text-primary" : "font-medium text-foreground",
-        )}
-      >
-        {name}
+      <span className="flex min-w-0 items-center gap-2">
+        <PlayerAvatar name={name} size="sm" />
+        <span
+          className={cn(
+            "truncate font-headline text-lg leading-tight",
+            highlighted ? "font-bold text-primary" : "font-medium text-foreground",
+          )}
+        >
+          {name}
+        </span>
       </span>
       <span className="shrink-0 text-xs text-muted-foreground">
         {seed != null && <>#{seed}</>}
         {seed != null && hcp != null && " · "}
         {hcp != null && <>Hcp {hcp}</>}
       </span>
-    </div>
+    </button>
   );
+
 }
 
 function MatchCard({ match, holes }: { match: Match; holes: HoleResult[] }) {
