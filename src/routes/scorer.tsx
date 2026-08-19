@@ -264,6 +264,12 @@ function MatchList() {
                     </span>
                     <StatusPill status={m.status} />
                   </div>
+                  {m.status === "completed" && (
+                    <p className="mt-1 text-sm font-semibold text-primary">
+                      {winnerName(m) ? `${winnerName(m)} won` : "Match completed"}
+                      {m.result_text ? ` · ${m.result_text}` : ""}
+                    </p>
+                  )}
                   <div className="mt-2 space-y-1">
                     <div>
                       <PlayerChip name={m.p1_name} />
