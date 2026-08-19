@@ -354,8 +354,9 @@ function TvBoard() {
   const secondsAgo = dataUpdatedAt ? Math.max(0, Math.round((Date.now() - dataUpdatedAt) / 1000)) : null;
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-primary text-primary-foreground">
-      {live.length === 0 && <IdleScreen next={nextUp} />}
+    <main className="relative min-h-screen overflow-hidden text-primary-foreground">
+      <PhotoBackdrop onIndexChange={setPhotoIndex} />
+      {live.length === 0 && <IdleScreen next={nextUp} photoIndex={photoIndex} />}
 
       <div className="relative flex min-h-screen flex-col px-safe py-6">
         <header className="flex items-center justify-between gap-6">
