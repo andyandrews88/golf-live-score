@@ -42,6 +42,7 @@ type Match = {
   date_label: string;
   tee_time: string;
   match_date: string;
+  sort_order: number | null;
   p1_name: string | null;
   p2_name: string | null;
   status: string;
