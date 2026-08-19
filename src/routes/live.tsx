@@ -25,6 +25,12 @@ export const Route = createFileRoute("/live")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
+  validateSearch: (search: Record<string, unknown>) => {
+    const d = String(search["division"] ?? "all");
+    return {
+      division: ["all", "men", "silver", "bronze"].includes(d) ? d : "all",
+    };
+  },
   component: LivePage,
 });
 
@@ -237,7 +243,13 @@ function MatchCard({ match, holes }: { match: Match; holes: HoleResult[] }) {
 }
 
 function LivePage() {
-  const [division, setDivision] = useState<string>("all");
+  const search = Route.useSearch();
+  const [division, setDivision] = useState<string>(search.division);
+
+  useEffect(() => {
+    setDivision(search.division);
+  }, [search.division]);
+
   const { data, isLoading, error } = useLiveData();
 
   const holesByMatch = useMemo(() => {
