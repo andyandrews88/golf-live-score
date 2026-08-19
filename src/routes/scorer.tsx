@@ -209,7 +209,7 @@ function MatchList() {
                 return ready ? (
                   <Link
                     key={m.id}
-                    to="/scorer_/$matchId"
+                    to="/scorer/$matchId"
                     params={{ matchId: m.id }}
                     className="block rounded-xl border border-border bg-card p-4 text-left shadow-sm transition-colors hover:border-primary"
                   >
