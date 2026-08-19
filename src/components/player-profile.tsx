@@ -10,12 +10,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { DIVISION_LABELS } from "@/lib/divisions";
 
-export const DIVISION_LABELS: Record<string, string> = {
-  men: "Men's Championship",
-  silver: "Ladies Silver",
-  bronze: "Ladies Bronze Cup",
-};
+export { DIVISION_LABELS } from "@/lib/divisions";
 
 export function initialsOf(name: string) {
   const parts = name.trim().split(/\s+/).filter(Boolean);

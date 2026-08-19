@@ -156,16 +156,6 @@ async function fetchMatches() {
   return (data ?? []) as Match[];
 }
 
-function divisionLabel(division: string) {
-  return division === "men"
-    ? "Men's Championship"
-    : division === "silver"
-      ? "Ladies Silver"
-      : division === "bronze"
-        ? "Ladies Bronze Cup"
-        : division;
-}
-
 function PlayerChip({ name }: { name: string | null }) {
   const profile = usePlayerProfile();
   if (!name) {

@@ -308,13 +308,7 @@ function Scoring({ matchId, passcode }: { matchId: string; passcode: string }) {
         </div>
         <p className="mt-3 font-headline text-sm font-semibold uppercase tracking-wide text-primary">
           {match.round} ·{" "}
-          {match.division === "men"
-            ? "Men's Championship"
-            : match.division === "silver"
-              ? "Ladies Silver"
-              : match.division === "bronze"
-                ? "Ladies Bronze Cup"
-                : match.division}
+{divisionLabel(match.division)}
         </p>
         <h1 className="flex flex-wrap items-center gap-3 font-headline text-3xl font-bold text-foreground">
           <button

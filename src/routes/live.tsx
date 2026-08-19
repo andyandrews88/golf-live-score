@@ -25,7 +25,7 @@ export const Route = createFileRoute("/live")({
       {
         property: "og:description",
         content:
-          "Follow every match live across the Men's Championship, Ladies Silver and Ladies Bronze Cup.",
+          `Follow every match live across ${DIVISION_LIST_TEXT}.`,
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -62,12 +62,7 @@ type Match = {
 
 type HoleResult = { match_id: string; hole_number: number; result: string };
 
-const DIVISIONS = [
-  { key: "all", label: "All Divisions" },
-  { key: "men", label: "Men's Championship" },
-  { key: "silver", label: "Ladies Silver" },
-  { key: "bronze", label: "Ladies Bronze Cup" },
-] as const;
+const DIVISIONS = ALL_DIVISION_TABS;
 
 const ROUND_ORDER = ["Round of 16", "Quarter-Final", "Semi-Final", "Final"];
 

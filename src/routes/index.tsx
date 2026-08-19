@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import crest from "@/assets/crest.png";
 import { useCoursePhotos } from "@/lib/course-photos";
 import { cn } from "@/lib/utils";
+import { DIVISION_LIST_TEXT, DIVISION_TABS } from "@/lib/divisions";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -13,13 +14,13 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Live match play scoring for the RCGC 105th Championship: Men's Championship, Ladies Silver and Ladies Bronze Cup.",
+          `Live match play scoring for the RCGC 105th Championship: ${DIVISION_LIST_TEXT}.`,
       },
       { property: "og:title", content: "RCGC 105th Championship — Live Scoring" },
       {
         property: "og:description",
         content:
-          "Follow every match live across the Men's Championship, Ladies Silver and Ladies Bronze Cup.",
+          `Follow every match live across ${DIVISION_LIST_TEXT}.`,
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -30,11 +31,7 @@ export const Route = createFileRoute("/")({
 
 const PHOTO_MS = 5000;
 
-const DIVISIONS = [
-  { key: "men", label: "Men's Championship" },
-  { key: "silver", label: "Ladies Silver" },
-  { key: "bronze", label: "Ladies Bronze Cup" },
-] as const;
+const DIVISIONS = DIVISION_TABS;
 
 function weatherLabel(code: number): string {
   if (code === 0) return "Clear";
@@ -206,7 +203,7 @@ function Index() {
           105th Championship
         </h1>
         <p className="mt-3 max-w-xl text-sm text-muted-foreground sm:text-base">
-          Match play across the Men's Championship, Ladies Silver and Ladies Bronze Cup — followed
+          Match play across {DIVISION_LIST_TEXT} — followed
           hole by hole, live.
         </p>
       </header>

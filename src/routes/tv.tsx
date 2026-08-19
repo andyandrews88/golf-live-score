@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { DIVISION_LABELS, DIVISION_ORDER } from "@/lib/divisions";
 import {
   PlayerAvatar,
   PlayerProfileProvider,
@@ -52,12 +53,6 @@ type Match = {
 
 type HoleResult = { match_id: string; hole_number: number; result: string };
 
-const DIVISION_ORDER = ["men", "silver", "bronze"] as const;
-const DIVISION_LABEL: Record<string, string> = {
-  men: "Men's Championship",
-  silver: "Ladies Silver",
-  bronze: "Ladies Bronze Cup",
-};
 
 const PAGE_SIZE = 4;
 const PAGE_MS = 15000;
@@ -147,7 +142,7 @@ function TvCard({ match, holes }: { match: Match; holes: HoleResult[] }) {
   return (
     <article className="flex flex-col rounded-2xl border border-primary-foreground/20 bg-primary/85 p-6 shadow-2xl backdrop-blur-[2px]">
       <p className="font-headline text-lg uppercase tracking-widest text-secondary">
-        {match.round} · {DIVISION_LABEL[match.division] ?? match.division}
+        {match.round} · {DIVISION_LABELS[match.division] ?? match.division}
       </p>
 
       <div className="mt-4 space-y-2">
@@ -213,7 +208,7 @@ function IdleScreen({
             {next.p2_name ?? "TBD"}
           </p>
           <p className="mt-4 text-2xl text-primary-foreground/85">
-            {next.round} · {DIVISION_LABEL[next.division] ?? next.division}
+            {next.round} · {DIVISION_LABELS[next.division] ?? next.division}
           </p>
           <p className="mt-2 text-xl text-primary-foreground/70">
             {next.date_label} · {next.tee_time}
@@ -340,7 +335,7 @@ function TvBoard() {
       for (let p = 0; p < total; p++) {
         out.push({
           heading:
-            (DIVISION_LABEL[div] ?? div) + (total > 1 ? ` · ${p + 1} of ${total}` : ""),
+            (DIVISION_LABELS[div] ?? div) + (total > 1 ? ` · ${p + 1} of ${total}` : ""),
           matches: inDiv.slice(p * PAGE_SIZE, (p + 1) * PAGE_SIZE),
         });
       }
