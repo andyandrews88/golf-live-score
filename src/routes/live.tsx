@@ -416,7 +416,7 @@ function LiveBoard() {
           </section>
         ))}
 
-        {!isLoading && !error && matches.length === 0 && (
+        {!isLoading && !error && filtered.length === 0 && (
           <p className="py-10 text-center text-sm text-muted-foreground">
             No matches in this division yet.
           </p>
