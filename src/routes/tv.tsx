@@ -145,7 +145,7 @@ function PlayerLine({
 function TvCard({ match, holes }: { match: Match; holes: HoleResult[] }) {
   const score = computeScore(holes);
   return (
-    <article className="flex flex-col rounded-2xl border border-primary-foreground/15 bg-primary-foreground/5 p-6">
+    <article className="flex flex-col rounded-2xl border border-primary-foreground/20 bg-primary/85 p-6 shadow-2xl backdrop-blur-[2px]">
       <p className="font-headline text-lg uppercase tracking-widest text-secondary">
         {match.round} · {DIVISION_LABEL[match.division] ?? match.division}
       </p>
@@ -235,8 +235,10 @@ function IdleScreen({
 
 function PhotoBackdrop({
   onIndexChange,
+  scrim = "light",
 }: {
   onIndexChange?: (index: number) => void;
+  scrim?: "none" | "light" | "heavy";
 }) {
   const { data: photos } = useCoursePhotos();
   const slides = photos ?? [];
@@ -267,7 +269,14 @@ function PhotoBackdrop({
           )}
         />
       ))}
-      <div className="absolute inset-0 bg-primary/70" />
+      <div
+        className={cn(
+          "absolute inset-0 transition-opacity duration-500",
+          scrim === "none" && "opacity-0 bg-primary/28",
+          scrim === "light" && "bg-primary/28",
+          scrim === "heavy" && "bg-primary/70",
+        )}
+      />
     </div>
   );
 }
@@ -339,26 +348,41 @@ function TvBoard() {
     return out;
   }, [live]);
 
-  const [pageIndex, setPageIndex] = useState(0);
+  const [stepIndex, setStepIndex] = useState(0);
   const [photoIndex, setPhotoIndex] = useState(0);
+  const hasLive = live.length > 0;
+  // Steps = each page of matches, plus one trailing "breather" step (clear photo).
+  const stepCount = hasLive ? pages.length + 1 : 1;
   useEffect(() => {
-    if (pages.length <= 1) {
-      setPageIndex(0);
+    if (stepCount <= 1) {
+      setStepIndex(0);
       return;
     }
-    const id = setInterval(() => setPageIndex((i) => (i + 1) % pages.length), PAGE_MS);
+    setStepIndex(0);
+    const id = setInterval(() => setStepIndex((i) => (i + 1) % stepCount), PAGE_MS);
     return () => clearInterval(id);
-  }, [pages.length]);
+  }, [stepCount]);
 
+  const safeStep = Math.min(stepIndex, stepCount - 1);
+  const isBreather = hasLive && safeStep === pages.length;
+  const pageIndex = isBreather ? 0 : safeStep;
   const page = pages[Math.min(pageIndex, pages.length - 1)];
   const secondsAgo = dataUpdatedAt ? Math.max(0, Math.round((Date.now() - dataUpdatedAt) / 1000)) : null;
 
   return (
     <main className="relative min-h-screen overflow-hidden text-primary-foreground">
-      <PhotoBackdrop onIndexChange={setPhotoIndex} />
-      {live.length === 0 && <IdleScreen next={nextUp} photoIndex={photoIndex} />}
+      <PhotoBackdrop
+        onIndexChange={setPhotoIndex}
+        scrim={hasLive ? (isBreather ? "none" : "light") : "heavy"}
+      />
+      {!hasLive && <IdleScreen next={nextUp} photoIndex={photoIndex} />}
 
-      <div className="relative flex min-h-screen flex-col px-safe py-6">
+      <div
+        className={cn(
+          "relative flex min-h-screen flex-col px-safe py-6 transition-opacity duration-500",
+          isBreather && "pointer-events-none opacity-0",
+        )}
+      >
         <header className="flex items-center justify-between gap-6">
           <div className="flex items-center gap-4">
             <img src={crest} alt="" width={512} height={512} className="size-16 xl:size-20" />
