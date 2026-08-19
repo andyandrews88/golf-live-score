@@ -52,11 +52,18 @@ function weatherLabel(code: number): string {
   return "Cloudy";
 }
 
-type Forecast = { high: number; low: number; label: string; rain: number | null };
+type Forecast = {
+  high: number;
+  low: number;
+  label: string;
+  rain: number | null;
+  wind: number | null;
+  humidity: number | null;
+};
 
 async function fetchWeather(): Promise<Forecast> {
   const res = await fetch(
-    "https://api.open-meteo.com/v1/forecast?latitude=6.89&longitude=79.87&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FColombo&forecast_days=1",
+    "https://api.open-meteo.com/v1/forecast?latitude=6.89&longitude=79.87&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&current=relative_humidity_2m,wind_speed_10m&timezone=Asia%2FColombo&forecast_days=1",
   );
   if (!res.ok) throw new Error("weather");
   const json = (await res.json()) as {
@@ -66,6 +73,10 @@ async function fetchWeather(): Promise<Forecast> {
       temperature_2m_min?: number[];
       precipitation_probability_max?: (number | null)[];
     };
+    current?: {
+      relative_humidity_2m?: number;
+      wind_speed_10m?: number;
+    };
   };
   const d = json.daily;
   if (!d?.weathercode?.length) throw new Error("weather");
@@ -74,6 +85,8 @@ async function fetchWeather(): Promise<Forecast> {
     low: Math.round(d.temperature_2m_min?.[0] ?? 0),
     label: weatherLabel(d.weathercode[0] ?? 0),
     rain: d.precipitation_probability_max?.[0] ?? null,
+    wind: json.current?.wind_speed_10m ?? null,
+    humidity: json.current?.relative_humidity_2m ?? null,
   };
 }
 
@@ -100,9 +113,11 @@ function WeatherPanel() {
           <p className="font-headline text-2xl font-bold text-foreground">
             {data.high}° / {data.low}°
           </p>
-          {data.rain !== null && (
-            <p className="text-xs text-muted-foreground">{data.rain}% chance of rain</p>
-          )}
+          <div className="mt-1 flex flex-wrap items-center justify-end gap-x-3 text-xs text-muted-foreground">
+            {data.rain !== null && <span>{data.rain}% rain</span>}
+            {data.wind !== null && <span>{Math.round(data.wind)} km/h wind</span>}
+            {data.humidity !== null && <span>{Math.round(data.humidity)}% humidity</span>}
+          </div>
         </div>
       </div>
     </section>
