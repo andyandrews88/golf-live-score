@@ -11,6 +11,11 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { getScorerPasscode } from "@/lib/scorer-session";
 import {
+  PlayerAvatar,
+  PlayerProfileProvider,
+  usePlayerProfile,
+} from "@/components/player-profile";
+import {
   completeMatch,
   recordHole,
   saveMatchComment,
@@ -102,10 +107,15 @@ function ScoringPage() {
     );
   }
 
-  return <Scoring matchId={matchId} passcode={passcode} />;
+  return (
+    <PlayerProfileProvider>
+      <Scoring matchId={matchId} passcode={passcode} />
+    </PlayerProfileProvider>
+  );
 }
 
 function Scoring({ matchId, passcode }: { matchId: string; passcode: string }) {
+  const profile = usePlayerProfile();
   const queryClient = useQueryClient();
   const queryKey = ["scorer-match", matchId];
   const { data, isLoading, error } = useQuery({ queryKey, queryFn: () => fetchMatch(matchId) });
@@ -238,8 +248,24 @@ function Scoring({ matchId, passcode }: { matchId: string; passcode: string }) {
                 ? "Ladies Bronze Cup"
                 : match.division}
         </p>
-        <h1 className="font-headline text-3xl font-bold text-foreground">
-          {p1} <span className="text-muted-foreground">vs</span> {p2}
+        <h1 className="flex flex-wrap items-center gap-3 font-headline text-3xl font-bold text-foreground">
+          <button
+            type="button"
+            onClick={() => profile?.open(p1)}
+            className="flex items-center gap-2 rounded-md px-1 hover:bg-muted"
+          >
+            <PlayerAvatar name={p1} size="md" />
+            {p1}
+          </button>
+          <span className="text-muted-foreground">vs</span>
+          <button
+            type="button"
+            onClick={() => profile?.open(p2)}
+            className="flex items-center gap-2 rounded-md px-1 hover:bg-muted"
+          >
+            <PlayerAvatar name={p2} size="md" />
+            {p2}
+          </button>
         </h1>
       </header>
 
