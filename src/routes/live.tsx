@@ -56,9 +56,10 @@ type Match = {
   status: string;
   result_text: string | null;
   winner: string | null;
+  comment: string | null;
 };
 
-type HoleResult = { match_id: string; result: string };
+type HoleResult = { match_id: string; hole_number: number; result: string };
 
 const DIVISIONS = [
   { key: "all", label: "All Divisions" },
@@ -75,7 +76,7 @@ async function fetchData() {
       .from("matches")
       .select("*")
       .order("sort_order", { ascending: true }),
-    supabase.from("hole_results").select("match_id, result"),
+    supabase.from("hole_results").select("match_id, hole_number, result"),
   ]);
   if (matchesRes.error) throw matchesRes.error;
   if (holesRes.error) throw holesRes.error;
