@@ -239,6 +239,25 @@ function Index() {
           </div>
         </div>
       </section>
+
+      <section className="mx-auto mt-6 w-full max-w-3xl">
+        <a
+          href="https://www.instagram.com/royalcolombogolfclub"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-4 rounded-xl border border-border bg-card p-4 shadow-sm transition-colors hover:border-primary"
+        >
+          <Instagram className="size-6 shrink-0 text-primary" aria-hidden />
+          <div>
+            <p className="font-headline text-base font-semibold text-foreground">
+              Follow along on Instagram
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Video updates, interviews, and more from the course.
+            </p>
+          </div>
+        </a>
+      </section>
     </main>
   );
 }
