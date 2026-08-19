@@ -399,6 +399,20 @@ function LiveBoard() {
             No matches in this division yet.
           </p>
         )}
+
+        {!isLoading && !error && matches.length > 0 && (
+          <footer className="mt-10 flex items-center justify-center gap-2 border-t border-border pt-6">
+            <a
+              href="https://www.instagram.com/royalcolombogolfclub"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-primary"
+            >
+              <Instagram className="size-5" aria-hidden />
+              <span className="font-medium">Follow us on Instagram</span>
+            </a>
+          </footer>
+        )}
       </div>
     </main>
   );
