@@ -126,6 +126,7 @@ function Scoring({ matchId, passcode }: { matchId: string; passcode: string }) {
   const start = useServerFn(startMatch);
   const complete = useServerFn(completeMatch);
   const saveComment = useServerFn(saveMatchComment);
+  const resetToUpcoming = useServerFn(resetMatchToUpcoming);
 
   const [busy, setBusy] = useState(false);
   const [decided, setDecided] = useState<{ winner: "p1" | "p2"; label: string } | null>(null);
