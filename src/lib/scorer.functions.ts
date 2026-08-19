@@ -160,7 +160,70 @@ export const completeMatch = createServerFn({ method: "POST" })
     return { ok: true as const };
   });
 
+export const undoMatchCompletion = createServerFn({ method: "POST" })
+  .inputValidator((data: { passcode: string; matchId: string }) => ({
+    passcode: String(data?.passcode ?? ""),
+    matchId: String(data?.matchId ?? ""),
+  }))
+  .handler(async ({ data }) => {
+    const db = await requireScorer(data.passcode);
+
+    const { data: match, error: matchErr } = await db
+      .from("matches")
+      .select("id, status, winner, feeds_into_match_id, feeds_into_slot")
+      .eq("id", data.matchId)
+      .maybeSingle();
+    if (matchErr) throw matchErr;
+    if (!match) throw new Error("Match not found");
+    if (match.status !== "completed") throw new Error("Match is not completed");
+
+    if (match.feeds_into_match_id) {
+      const { data: next, error: nextErr } = await db
+        .from("matches")
+        .select("id, status")
+        .eq("id", match.feeds_into_match_id)
+        .maybeSingle();
+      if (nextErr) throw nextErr;
+
+      const { count, error: countErr } = await db
+        .from("hole_results")
+        .select("id", { count: "exact", head: true })
+        .eq("match_id", match.feeds_into_match_id);
+      if (countErr) throw countErr;
+
+      if (!next || next.status !== "upcoming" || (count ?? 0) > 0) {
+        throw new Error("Next match has already begun");
+      }
+
+      if (match.feeds_into_slot === 1 || match.feeds_into_slot === 2) {
+        const clearPatch =
+          match.feeds_into_slot === 1
+            ? { p1_name: null, p1_seed: null, p1_hcp: null }
+            : { p2_name: null, p2_seed: null, p2_hcp: null };
+        const { error: clearErr } = await db
+          .from("matches")
+          .update({ ...clearPatch, updated_at: new Date().toISOString() })
+          .eq("id", match.feeds_into_match_id);
+        if (clearErr) throw clearErr;
+      }
+
+    }
+
+    const { error } = await db
+      .from("matches")
+      .update({
+        status: "live",
+        winner: null,
+        result_text: null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", data.matchId);
+    if (error) throw error;
+    return { ok: true as const };
+  });
+
 export const saveMatchComment = createServerFn({ method: "POST" })
+
   .inputValidator((data: { passcode: string; matchId: string; comment: string }) => ({
     passcode: String(data?.passcode ?? ""),
     matchId: String(data?.matchId ?? ""),

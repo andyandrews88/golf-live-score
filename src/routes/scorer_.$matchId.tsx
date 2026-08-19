@@ -22,6 +22,7 @@ import {
   saveMatchComment,
   startMatch,
   undoLastHole,
+  undoMatchCompletion,
 } from "@/lib/scorer.functions";
 
 export const Route = createFileRoute("/scorer_/$matchId")({
@@ -57,6 +58,8 @@ type Match = {
   winner: string | null;
   result_text: string | null;
   comment: string | null;
+  feeds_into_match_id: string | null;
+  feeds_into_slot: number | null;
 };
 
 type Hole = { id: number; hole_number: number; result: string };
@@ -66,7 +69,7 @@ async function fetchMatch(matchId: string) {
     supabase
       .from("matches")
       .select(
-        "id, division, round, date_label, tee_time, p1_name, p2_name, status, winner, result_text, comment",
+        "id, division, round, date_label, tee_time, p1_name, p2_name, status, winner, result_text, comment, feeds_into_match_id, feeds_into_slot",
       )
       .eq("id", matchId)
       .maybeSingle(),
@@ -78,11 +81,32 @@ async function fetchMatch(matchId: string) {
   ]);
   if (matchRes.error) throw matchRes.error;
   if (holesRes.error) throw holesRes.error;
+
+  const match = matchRes.data as Match | null;
+  let nextLocked = false;
+  if (match?.status === "completed" && match.feeds_into_match_id) {
+    const [nextRes, nextHolesRes] = await Promise.all([
+      supabase
+        .from("matches")
+        .select("id, status")
+        .eq("id", match.feeds_into_match_id)
+        .maybeSingle(),
+      supabase
+        .from("hole_results")
+        .select("id", { count: "exact", head: true })
+        .eq("match_id", match.feeds_into_match_id),
+    ]);
+    const nextStatus = nextRes.data?.status ?? null;
+    nextLocked = nextStatus !== "upcoming" || (nextHolesRes.count ?? 0) > 0;
+  }
+
   return {
-    match: matchRes.data as Match | null,
+    match,
     holes: (holesRes.data ?? []) as Hole[],
+    nextLocked,
   };
 }
+
 
 function ScoringPage() {
   const { matchId } = Route.useParams();
@@ -127,11 +151,13 @@ function Scoring({ matchId, passcode }: { matchId: string; passcode: string }) {
   const complete = useServerFn(completeMatch);
   const saveComment = useServerFn(saveMatchComment);
   const resetToUpcoming = useServerFn(resetMatchToUpcoming);
+  const undoCompletion = useServerFn(undoMatchCompletion);
 
   const [busy, setBusy] = useState(false);
   const [decided, setDecided] = useState<{ winner: "p1" | "p2"; label: string } | null>(null);
   const [manualOpen, setManualOpen] = useState(false);
   const [resetOpen, setResetOpen] = useState(false);
+  const [undoCompleteOpen, setUndoCompleteOpen] = useState(false);
   const [manualWinner, setManualWinner] = useState<"p1" | "p2">("p1");
   const [manualLabel, setManualLabel] = useState("");
   const [comment, setComment] = useState<string | null>(null);
@@ -216,6 +242,19 @@ function Scoring({ matchId, passcode }: { matchId: string; passcode: string }) {
     }
   }
 
+  async function onUndoCompletion() {
+    if (busy) return;
+    setBusy(true);
+    try {
+      await undoCompletion({ data: { passcode, matchId } });
+      setUndoCompleteOpen(false);
+      setDecided(null);
+      await refresh();
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function onComplete(winner: "p1" | "p2", resultText: string) {
     setBusy(true);
     try {
@@ -246,6 +285,7 @@ function Scoring({ matchId, passcode }: { matchId: string; passcode: string }) {
   const p1 = match.p1_name ?? "Player 1";
   const p2 = match.p2_name ?? "Player 2";
   const completed = match.status === "completed";
+  const nextLocked = data?.nextLocked ?? false;
 
   return (
     <main className="min-h-screen bg-background px-safe pb-20">
@@ -329,7 +369,52 @@ function Scoring({ matchId, passcode }: { matchId: string; passcode: string }) {
         )}
       </section>
 
+      {completed && (
+        <div className="mx-auto mt-6 max-w-xl text-center">
+          {nextLocked ? (
+            <p className="text-xs text-muted-foreground">
+              Can't undo — the next match has already begun.
+            </p>
+          ) : undoCompleteOpen ? (
+            <div className="rounded-lg border border-border bg-card p-4 text-left">
+              <p className="text-sm text-foreground">
+                Undo completion and put this match back to Live? Recorded holes are kept.
+              </p>
+              <div className="mt-3 flex gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="flex-1"
+                  disabled={busy}
+                  onClick={onUndoCompletion}
+                >
+                  Yes, undo
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="flex-1"
+                  onClick={() => setUndoCompleteOpen(false)}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => setUndoCompleteOpen(true)}
+              className="text-xs text-muted-foreground underline underline-offset-4 hover:text-foreground disabled:opacity-50"
+            >
+              Undo completion
+            </button>
+          )}
+        </div>
+      )}
+
       {!completed && match.status === "upcoming" ? (
+
         <div className="mx-auto mt-6 max-w-xl">
           <Button size="lg" className="h-16 w-full text-lg" disabled={busy} onClick={onStart}>
             Start Match
