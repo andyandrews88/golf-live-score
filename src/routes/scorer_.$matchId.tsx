@@ -6,6 +6,7 @@ import { Undo2 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { computeMatchScore } from "@/lib/match-score";
 import crest from "@/assets/crest.png";
 import { divisionLabel } from "@/lib/divisions";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ import {
   recordHole,
   resetMatchToUpcoming,
   saveMatchComment,
+  saveQuickScore,
   startMatch,
   undoLastHole,
   undoMatchCompletion,
@@ -62,22 +64,25 @@ type Match = {
   comment: string | null;
   feeds_into_match_id: string | null;
   feeds_into_slot: number | null;
+  quick_thru: number | null;
+  quick_diff: number | null;
+  quick_updated_at: string | null;
 };
 
-type Hole = { id: number; hole_number: number; result: string };
+type Hole = { id: number; hole_number: number; result: string; created_at: string };
 
 async function fetchMatch(matchId: string) {
   const [matchRes, holesRes] = await Promise.all([
     supabase
       .from("matches")
       .select(
-        "id, division, round, date_label, tee_time, p1_name, p2_name, status, winner, result_text, comment, feeds_into_match_id, feeds_into_slot",
+        "id, division, round, date_label, tee_time, p1_name, p2_name, status, winner, result_text, comment, feeds_into_match_id, feeds_into_slot, quick_thru, quick_diff, quick_updated_at",
       )
       .eq("id", matchId)
       .maybeSingle(),
     supabase
       .from("hole_results")
-      .select("id, hole_number, result")
+      .select("id, hole_number, result, created_at")
       .eq("match_id", matchId)
       .order("hole_number", { ascending: true }),
   ]);
@@ -152,6 +157,7 @@ function Scoring({ matchId, passcode }: { matchId: string; passcode: string }) {
   const start = useServerFn(startMatch);
   const complete = useServerFn(completeMatch);
   const saveComment = useServerFn(saveMatchComment);
+  const saveQuick = useServerFn(saveQuickScore);
   const resetToUpcoming = useServerFn(resetMatchToUpcoming);
   const undoCompletion = useServerFn(undoMatchCompletion);
 
@@ -163,6 +169,10 @@ function Scoring({ matchId, passcode }: { matchId: string; passcode: string }) {
   const [manualWinner, setManualWinner] = useState<"p1" | "p2">("p1");
   const [manualLabel, setManualLabel] = useState("");
   const [comment, setComment] = useState<string | null>(null);
+  const [quickThru, setQuickThru] = useState("");
+  const [quickSide, setQuickSide] = useState<"p1" | "square" | "p2">("square");
+  const [quickMargin, setQuickMargin] = useState("");
+  const [quickStatus, setQuickStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
 
   const match = data?.match ?? null;
@@ -178,14 +188,17 @@ function Scoring({ matchId, passcode }: { matchId: string; passcode: string }) {
 
   const p1Wins = holes.filter((h) => h.result === "p1").length;
   const p2Wins = holes.filter((h) => h.result === "p2").length;
-  const thru = holes.length;
-  const diff = p1Wins - p2Wins;
-  const margin = Math.abs(diff);
-  const leftAfter = 18 - thru;
-  const leader: "p1" | "p2" | null = diff > 0 ? "p1" : diff < 0 ? "p2" : null;
-
-  const scoreLine =
-    thru === 0 ? "LIVE" : diff === 0 ? `ALL SQUARE THRU ${thru}` : `${margin} UP THRU ${thru}`;
+  const score = computeMatchScore(holes, {
+    thru: match?.quick_thru ?? null,
+    diff: match?.quick_diff ?? null,
+    updatedAt: match?.quick_updated_at ?? null,
+  });
+  const holesActive = score.source === "holes";
+  const thru = score.thru;
+  const diff = score.diff;
+  const leader: "p1" | "p2" | null =
+    score.leader === 1 ? "p1" : score.leader === 2 ? "p2" : null;
+  const scoreLine = score.text;
 
   async function onRecord(result: "p1" | "p2" | "half") {
     if (busy) return;
@@ -196,15 +209,47 @@ function Scoring({ matchId, passcode }: { matchId: string; passcode: string }) {
       const nextP2 = p2Wins + (result === "p2" ? 1 : 0);
       const nextThru = thru + 1;
       const nextDiff = nextP1 - nextP2;
-      const nextMargin = Math.abs(nextDiff);
-      const nextLeft = 18 - nextThru;
-      if (nextMargin > nextLeft && nextMargin > 0) {
-        setDecided({
-          winner: nextDiff > 0 ? "p1" : "p2",
-          label: nextLeft === 0 ? `${nextMargin} UP` : `${nextMargin}&${nextLeft}`,
-        });
-      }
+      checkDecided(nextThru, nextDiff);
       await refresh();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function checkDecided(nextThru: number, nextDiff: number) {
+    const nextMargin = Math.abs(nextDiff);
+    const nextLeft = 18 - nextThru;
+    if (nextMargin > nextLeft && nextMargin > 0) {
+      setDecided({
+        winner: nextDiff > 0 ? "p1" : "p2",
+        label: nextLeft === 0 ? `${nextMargin} UP` : `${nextMargin}&${nextLeft}`,
+      });
+    }
+  }
+
+  async function onQuickSave() {
+    if (busy) return;
+    const t = Number(quickThru);
+    if (!Number.isInteger(t) || t < 0 || t > 18) {
+      setQuickStatus("error");
+      return;
+    }
+    const m = quickSide === "square" ? 0 : Number(quickMargin);
+    if (!Number.isInteger(m) || m < 0 || m > t) {
+      setQuickStatus("error");
+      return;
+    }
+    const nextDiff = quickSide === "p1" ? m : quickSide === "p2" ? -m : 0;
+    setBusy(true);
+    setQuickStatus("saving");
+    try {
+      await saveQuick({ data: { passcode, matchId, thru: t, diff: nextDiff } });
+      setQuickStatus("saved");
+      window.setTimeout(() => setQuickStatus("idle"), 2000);
+      checkDecided(t, nextDiff);
+      await refresh();
+    } catch {
+      setQuickStatus("error");
     } finally {
       setBusy(false);
     }
@@ -353,6 +398,7 @@ function Scoring({ matchId, passcode }: { matchId: string; passcode: string }) {
           </>
         )}
 
+        {holesActive && (
         <div className="mt-4 flex flex-wrap justify-center gap-1.5">
           {holes.map((h) => (
             <span
@@ -366,9 +412,17 @@ function Scoring({ matchId, passcode }: { matchId: string; passcode: string }) {
               )}
             />
           ))}
-          {thru === 0 && <span className="text-xs text-muted-foreground">No holes recorded</span>}
+          {holes.length === 0 && (
+            <span className="text-xs text-muted-foreground">No holes recorded</span>
+          )}
         </div>
-        {thru > 0 && (
+        )}
+        {!holesActive && (
+          <p className="mt-3 text-xs text-muted-foreground">
+            Showing the latest direct score update.
+          </p>
+        )}
+        {holesActive && holes.length > 0 && (
           <p className="mt-2 text-xs text-muted-foreground">
             <span className="inline-block size-2 rounded-full bg-primary align-middle" /> {p1} ·{" "}
             <span className="inline-block size-2 rounded-full bg-secondary align-middle" /> {p2} ·{" "}
@@ -433,7 +487,7 @@ function Scoring({ matchId, passcode }: { matchId: string; passcode: string }) {
           <Button
             size="lg"
             className="h-20 w-full text-lg"
-            disabled={busy || thru >= 18}
+            disabled={busy || holes.length >= 18}
             onClick={() => onRecord("p1")}
           >
             {p1} wins hole
@@ -442,7 +496,7 @@ function Scoring({ matchId, passcode }: { matchId: string; passcode: string }) {
             size="lg"
             variant="secondary"
             className="h-20 w-full text-lg"
-            disabled={busy || thru >= 18}
+            disabled={busy || holes.length >= 18}
             onClick={() => onRecord("p2")}
           >
             {p2} wins hole
@@ -451,21 +505,23 @@ function Scoring({ matchId, passcode }: { matchId: string; passcode: string }) {
             size="lg"
             variant="outline"
             className="h-16 w-full text-lg"
-            disabled={busy || thru >= 18}
+            disabled={busy || holes.length >= 18}
             onClick={() => onRecord("half")}
           >
             Hole halved
           </Button>
-          <Button
-            variant="ghost"
-            className="w-full"
-            disabled={busy || thru === 0}
-            onClick={onUndo}
-          >
-            <Undo2 className="mr-2 size-4" aria-hidden />
-            Undo last hole
-          </Button>
-          {match.status === "live" && thru === 0 && (
+          {holesActive && (
+            <Button
+              variant="ghost"
+              className="w-full"
+              disabled={busy || holes.length === 0}
+              onClick={onUndo}
+            >
+              <Undo2 className="mr-2 size-4" aria-hidden />
+              Undo last hole
+            </Button>
+          )}
+          {match.status === "live" && holes.length === 0 && !match.quick_updated_at && (
             <div className="text-center">
               {resetOpen ? (
                 <div className="rounded-lg border border-border bg-card p-4">
@@ -515,6 +571,86 @@ function Scoring({ matchId, passcode }: { matchId: string; passcode: string }) {
             </Button>
           </div>
         </div>
+      )}
+
+      {!completed && match.status !== "upcoming" && (
+        <section className="mx-auto mt-6 max-w-xl rounded-xl border border-border bg-card p-5 shadow-sm">
+          <h2 className="font-headline text-lg font-bold text-foreground">
+            Update score directly
+          </h2>
+          <p className="mt-1 text-xs text-muted-foreground">
+            For check-ins — this replaces the hole-by-hole score until the next hole is recorded.
+          </p>
+
+          <label htmlFor="quick-thru" className="mt-4 block text-sm font-medium text-foreground">
+            Holes played
+          </label>
+          <Input
+            id="quick-thru"
+            inputMode="numeric"
+            className="mt-1"
+            value={quickThru}
+            onChange={(e) => setQuickThru(e.target.value.replace(/[^0-9]/g, ""))}
+            placeholder="e.g. 7"
+          />
+
+          <p className="mt-4 text-sm font-medium text-foreground">Who's ahead?</p>
+          <div className="mt-1 grid gap-2">
+            <Button
+              variant={quickSide === "p1" ? "default" : "outline"}
+              onClick={() => setQuickSide("p1")}
+            >
+              {p1}
+            </Button>
+            <Button
+              variant={quickSide === "square" ? "default" : "outline"}
+              onClick={() => setQuickSide("square")}
+            >
+              All Square
+            </Button>
+            <Button
+              variant={quickSide === "p2" ? "default" : "outline"}
+              onClick={() => setQuickSide("p2")}
+            >
+              {p2}
+            </Button>
+          </div>
+
+          {quickSide !== "square" && (
+            <>
+              <label
+                htmlFor="quick-margin"
+                className="mt-4 block text-sm font-medium text-foreground"
+              >
+                Up by how many holes?
+              </label>
+              <Input
+                id="quick-margin"
+                inputMode="numeric"
+                className="mt-1"
+                value={quickMargin}
+                onChange={(e) => setQuickMargin(e.target.value.replace(/[^0-9]/g, ""))}
+                placeholder="e.g. 2"
+              />
+            </>
+          )}
+
+          <Button className="mt-4 w-full" disabled={busy} onClick={onQuickSave}>
+            Save score update
+          </Button>
+          <p
+            className={cn(
+              "mt-1 text-xs",
+              quickStatus === "error" ? "font-medium text-destructive" : "text-muted-foreground",
+            )}
+            aria-live="polite"
+          >
+            {quickStatus === "saving" && "Saving…"}
+            {quickStatus === "saved" && "Saved"}
+            {quickStatus === "error" && "Couldn't save — check the numbers and try again"}
+            {quickStatus === "idle" && "\u00A0"}
+          </p>
+        </section>
       )}
 
       {!completed && (
