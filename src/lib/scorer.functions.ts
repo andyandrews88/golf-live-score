@@ -104,6 +104,34 @@ export const startMatch = createServerFn({ method: "POST" })
     return { ok: true as const };
   });
 
+export const resetMatchToUpcoming = createServerFn({ method: "POST" })
+  .inputValidator((data: { passcode: string; matchId: string }) => ({
+    passcode: String(data?.passcode ?? ""),
+    matchId: String(data?.matchId ?? ""),
+  }))
+  .handler(async ({ data }) => {
+    const db = await requireScorer(data.passcode);
+    const { count, error: countErr } = await db
+      .from("hole_results")
+      .select("id", { count: "exact", head: true })
+      .eq("match_id", data.matchId);
+    if (countErr) throw countErr;
+    if ((count ?? 0) > 0) throw new Error("Holes already recorded");
+
+    const { error } = await db
+      .from("matches")
+      .update({
+        status: "upcoming",
+        winner: null,
+        result_text: null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", data.matchId)
+      .eq("status", "live");
+    if (error) throw error;
+    return { ok: true as const };
+  });
+
 export const completeMatch = createServerFn({ method: "POST" })
   .inputValidator(
     (data: { passcode: string; matchId: string; winner: string; resultText: string }) => {
