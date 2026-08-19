@@ -26,7 +26,7 @@ export const Route = createFileRoute("/live")({
     ],
   }),
   validateSearch: (search: Record<string, unknown>) => {
-    const d = String(search.division ?? "all");
+    const d = String(search["division"] ?? "all");
     return {
       division: ["all", "men", "silver", "bronze"].includes(d) ? d : "all",
     };
