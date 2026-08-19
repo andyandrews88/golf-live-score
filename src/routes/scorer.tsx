@@ -60,6 +60,8 @@ type Match = {
   p1_name: string | null;
   p2_name: string | null;
   status: string;
+  result_text: string | null;
+  winner: string | null;
 };
 
 function StatusPill({ status }: { status: string }) {
@@ -150,11 +152,17 @@ async function fetchMatches() {
   const { data, error } = await supabase
     .from("matches")
     .select(
-      "id, division, round, date_label, tee_time, match_date, sort_order, p1_name, p2_name, status",
+      "id, division, round, date_label, tee_time, match_date, sort_order, p1_name, p2_name, status, result_text, winner",
     )
     .order("sort_order", { ascending: true });
   if (error) throw error;
   return (data ?? []) as Match[];
+}
+
+function winnerName(match: Match) {
+  if (match.winner === "p1") return match.p1_name;
+  if (match.winner === "p2") return match.p2_name;
+  return null;
 }
 
 function PlayerChip({ name }: { name: string | null }) {
