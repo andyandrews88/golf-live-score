@@ -122,6 +122,7 @@ function Scoring({ matchId, passcode }: { matchId: string; passcode: string }) {
   const [manualWinner, setManualWinner] = useState<"p1" | "p2">("p1");
   const [manualLabel, setManualLabel] = useState("");
   const [comment, setComment] = useState<string | null>(null);
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
 
   const match = data?.match ?? null;
   const holes = data?.holes ?? [];
@@ -418,15 +419,36 @@ function Scoring({ matchId, passcode }: { matchId: string; passcode: string }) {
           onChange={(e) => setComment(e.target.value)}
           onBlur={async () => {
             if ((comment ?? "") === (match.comment ?? "")) return;
-            await saveComment({ data: { passcode, matchId, comment: comment ?? "" } });
-            await refresh();
+            setSaveStatus("saving");
+            try {
+              await saveComment({ data: { passcode, matchId, comment: comment ?? "" } });
+              await refresh();
+              setSaveStatus("saved");
+              window.setTimeout(() => setSaveStatus("idle"), 2000);
+            } catch {
+              setSaveStatus("error");
+            }
           }}
           className="mt-2"
           placeholder="e.g. Long putt on 7 to halve the hole"
         />
-        <p className="mt-1 text-right text-xs text-muted-foreground">
-          {(comment ?? "").length}/140
-        </p>
+        <div className="mt-1 flex items-center justify-between text-xs">
+          <span
+            className={cn(
+              saveStatus === "saved" && "text-primary",
+              saveStatus === "error" && "text-destructive font-medium",
+              saveStatus === "idle" && "text-muted-foreground",
+              saveStatus === "saving" && "text-muted-foreground",
+            )}
+            aria-live="polite"
+          >
+            {saveStatus === "saving" && "Saving…"}
+            {saveStatus === "saved" && "Saved"}
+            {saveStatus === "error" && "Couldn't save — try again"}
+            {saveStatus === "idle" && "\u00A0"}
+          </span>
+          <span className="text-muted-foreground">{(comment ?? "").length}/140</span>
+        </div>
       </section>
     </main>
   );
