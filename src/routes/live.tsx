@@ -25,6 +25,12 @@ export const Route = createFileRoute("/live")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
+  validateSearch: (search: Record<string, unknown>) => {
+    const d = String(search.division ?? "all");
+    return {
+      division: ["all", "men", "silver", "bronze"].includes(d) ? d : "all",
+    };
+  },
   component: LivePage,
 });
 
