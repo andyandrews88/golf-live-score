@@ -131,6 +131,7 @@ function Scoring({ matchId, passcode }: { matchId: string; passcode: string }) {
   const [busy, setBusy] = useState(false);
   const [decided, setDecided] = useState<{ winner: "p1" | "p2"; label: string } | null>(null);
   const [manualOpen, setManualOpen] = useState(false);
+  const [resetOpen, setResetOpen] = useState(false);
   const [manualWinner, setManualWinner] = useState<"p1" | "p2">("p1");
   const [manualLabel, setManualLabel] = useState("");
   const [comment, setComment] = useState<string | null>(null);
