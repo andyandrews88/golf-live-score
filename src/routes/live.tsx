@@ -356,7 +356,7 @@ function LiveBoard() {
       </header>
 
       <div className="mx-auto max-w-3xl">
-        <Tabs value={division} onValueChange={setDivision}>
+        <Tabs value={division} onValueChange={changeDivision}>
           <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 bg-muted">
             {DIVISIONS.map((d) => (
               <TabsTrigger key={d.key} value={d.key} className="text-xs sm:text-sm">
@@ -365,6 +365,22 @@ function LiveBoard() {
             ))}
           </TabsList>
         </Tabs>
+
+        {roundTabs.length > 0 && (
+          <Tabs value={round} onValueChange={setRound} className="mt-2">
+            <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 bg-muted">
+              <TabsTrigger value="all" className="text-xs sm:text-sm">
+                All Rounds
+              </TabsTrigger>
+              {roundTabs.map((r) => (
+                <TabsTrigger key={r} value={r} className="text-xs sm:text-sm">
+                  {r}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+        )}
+
 
         {isLoading && (
           <p className="py-10 text-center text-sm text-muted-foreground">Loading matches…</p>
