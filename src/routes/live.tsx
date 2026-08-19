@@ -276,10 +276,17 @@ function LivePage() {
 function LiveBoard() {
   const search = Route.useSearch();
   const [division, setDivision] = useState<string>(search.division);
+  const [round, setRound] = useState<string>("all");
 
   useEffect(() => {
     setDivision(search.division);
+    setRound("all");
   }, [search.division]);
+
+  const changeDivision = (d: string) => {
+    setDivision(d);
+    setRound("all");
+  };
 
   const { data, isLoading, error } = useLiveData();
 
@@ -301,9 +308,16 @@ function LiveBoard() {
 
   const liveMatches = matches.filter((m) => m.status === "live");
 
+  const roundTabs = division === "all" ? [] : (DIVISION_ROUNDS[division] ?? ROUND_ORDER);
+
+  const filtered = useMemo(
+    () => (round === "all" ? matches : matches.filter((m) => m.round === round)),
+    [matches, round],
+  );
+
   const rounds = useMemo(() => {
     const groups = new Map<string, Match[]>();
-    for (const m of matches) {
+    for (const m of filtered) {
       const arr = groups.get(m.round);
       if (arr) arr.push(m);
       else groups.set(m.round, [m]);
@@ -314,7 +328,8 @@ function LiveBoard() {
       if (ai !== bi) return (ai < 0 ? 99 : ai) - (bi < 0 ? 99 : bi);
       return a[0].localeCompare(b[0]);
     });
-  }, [matches]);
+  }, [filtered]);
+
 
   return (
     <main className="min-h-screen bg-background px-safe pb-16">
