@@ -57,6 +57,8 @@ type Match = {
   winner: string | null;
   result_text: string | null;
   comment: string | null;
+  feeds_into_match_id: string | null;
+  feeds_into_slot: number | null;
 };
 
 type Hole = { id: number; hole_number: number; result: string };
@@ -66,7 +68,7 @@ async function fetchMatch(matchId: string) {
     supabase
       .from("matches")
       .select(
-        "id, division, round, date_label, tee_time, p1_name, p2_name, status, winner, result_text, comment",
+        "id, division, round, date_label, tee_time, p1_name, p2_name, status, winner, result_text, comment, feeds_into_match_id, feeds_into_slot",
       )
       .eq("id", matchId)
       .maybeSingle(),
@@ -78,11 +80,32 @@ async function fetchMatch(matchId: string) {
   ]);
   if (matchRes.error) throw matchRes.error;
   if (holesRes.error) throw holesRes.error;
+
+  const match = matchRes.data as Match | null;
+  let nextLocked = false;
+  if (match?.status === "completed" && match.feeds_into_match_id) {
+    const [nextRes, nextHolesRes] = await Promise.all([
+      supabase
+        .from("matches")
+        .select("id, status")
+        .eq("id", match.feeds_into_match_id)
+        .maybeSingle(),
+      supabase
+        .from("hole_results")
+        .select("id", { count: "exact", head: true })
+        .eq("match_id", match.feeds_into_match_id),
+    ]);
+    const nextStatus = nextRes.data?.status ?? null;
+    nextLocked = nextStatus !== "upcoming" || (nextHolesRes.count ?? 0) > 0;
+  }
+
   return {
-    match: matchRes.data as Match | null,
+    match,
     holes: (holesRes.data ?? []) as Hole[],
+    nextLocked,
   };
 }
+
 
 function ScoringPage() {
   const { matchId } = Route.useParams();
