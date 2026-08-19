@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LiveRouteImport } from './routes/live'
+import { Route as LoadtestRouteImport } from './routes/loadtest'
 import { Route as ScorerRouteImport } from './routes/scorer'
 import { Route as TvRouteImport } from './routes/tv'
 import { Route as ScorerMatchIdRouteImport } from './routes/scorer_.$matchId'
@@ -23,6 +24,11 @@ const IndexRoute = IndexRouteImport.update({
 const LiveRoute = LiveRouteImport.update({
   id: '/live',
   path: '/live',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoadtestRoute = LoadtestRouteImport.update({
+  id: '/loadtest',
+  path: '/loadtest',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ScorerRoute = ScorerRouteImport.update({
@@ -44,6 +50,7 @@ const ScorerMatchIdRoute = ScorerMatchIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/live': typeof LiveRoute
+  '/loadtest': typeof LoadtestRoute
   '/scorer': typeof ScorerRoute
   '/tv': typeof TvRoute
   '/scorer/$matchId': typeof ScorerMatchIdRoute
@@ -51,6 +58,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/live': typeof LiveRoute
+  '/loadtest': typeof LoadtestRoute
   '/scorer': typeof ScorerRoute
   '/tv': typeof TvRoute
   '/scorer/$matchId': typeof ScorerMatchIdRoute
@@ -59,21 +67,31 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/live': typeof LiveRoute
+  '/loadtest': typeof LoadtestRoute
   '/scorer': typeof ScorerRoute
   '/tv': typeof TvRoute
   '/scorer_/$matchId': typeof ScorerMatchIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/live' | '/scorer' | '/tv' | '/scorer/$matchId'
+  fullPaths:
+    '/' | '/live' | '/loadtest' | '/scorer' | '/tv' | '/scorer/$matchId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/live' | '/scorer' | '/tv' | '/scorer/$matchId'
-  id: '__root__' | '/' | '/live' | '/scorer' | '/tv' | '/scorer_/$matchId'
+  to: '/' | '/live' | '/loadtest' | '/scorer' | '/tv' | '/scorer/$matchId'
+  id:
+    | '__root__'
+    | '/'
+    | '/live'
+    | '/loadtest'
+    | '/scorer'
+    | '/tv'
+    | '/scorer_/$matchId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LiveRoute: typeof LiveRoute
+  LoadtestRoute: typeof LoadtestRoute
   ScorerRoute: typeof ScorerRoute
   TvRoute: typeof TvRoute
   ScorerMatchIdRoute: typeof ScorerMatchIdRoute
@@ -93,6 +111,13 @@ declare module '@tanstack/react-router' {
       path: '/live'
       fullPath: '/live'
       preLoaderRoute: typeof LiveRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/loadtest': {
+      id: '/loadtest'
+      path: '/loadtest'
+      fullPath: '/loadtest'
+      preLoaderRoute: typeof LoadtestRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/scorer': {
@@ -122,6 +147,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LiveRoute: LiveRoute,
+  LoadtestRoute: LoadtestRoute,
   ScorerRoute: ScorerRoute,
   TvRoute: TvRoute,
   ScorerMatchIdRoute: ScorerMatchIdRoute,
