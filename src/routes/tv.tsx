@@ -378,7 +378,13 @@ function TvBoard() {
       {!hasLive && <IdleScreen next={nextUp} photoIndex={photoIndex} />}
 
       <div className="relative flex min-h-screen flex-col">
-        <header className="flex items-center justify-between gap-6 bg-primary/95 px-safe py-6 shadow-2xl backdrop-blur-sm">
+        <header
+          className="flex items-center justify-between gap-6 px-safe py-6"
+          style={{
+            background:
+              "linear-gradient(to bottom, rgba(0, 96, 57, 0.95) 0%, rgba(0, 96, 57, 0) 220px)",
+          }}
+        >
           <div className="flex items-center gap-4">
             <img src={crest} alt="" width={512} height={512} className="size-16 xl:size-20" />
             <h1 className="font-headline text-3xl font-bold tracking-wide xl:text-4xl">
@@ -390,7 +396,7 @@ function TvBoard() {
               <span className="size-3 animate-pulse rounded-full bg-secondary" aria-hidden />
               Live Coverage
             </p>
-            <p className="text-base text-primary-foreground/70">
+            <p className="text-base text-primary-foreground/80">
               {secondsAgo == null ? "Connecting…" : `Updated ${secondsAgo}s ago`}
             </p>
           </div>
