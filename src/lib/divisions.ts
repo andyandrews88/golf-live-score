@@ -27,3 +27,10 @@ export const ALL_DIVISION_TABS = [
 
 /** e.g. "Men's Championship, Ladies Championship and Ladies Bronze Cup" */
 export const DIVISION_LIST_TEXT = `${DIVISION_LABELS["men"]}, ${DIVISION_LABELS["silver"]} and ${DIVISION_LABELS["bronze"]}`;
+
+/** Round filter options per division (labels match matches.round values). */
+export const DIVISION_ROUNDS: Record<string, string[]> = {
+  men: ["Round of 16", "Quarter-Final", "Semi-Final", "Final"],
+  silver: ["Quarter-Final", "Semi-Final", "Final"],
+  bronze: ["Quarter-Final", "Semi-Final", "Final"],
+};

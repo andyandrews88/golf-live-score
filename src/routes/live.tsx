@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { computeMatchScore } from "@/lib/match-score";
 import crest from "@/assets/crest.png";
-import { ALL_DIVISION_TABS, DIVISION_LIST_TEXT } from "@/lib/divisions";
+import { ALL_DIVISION_TABS, DIVISION_LIST_TEXT, DIVISION_ROUNDS } from "@/lib/divisions";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   PlayerAvatar,
