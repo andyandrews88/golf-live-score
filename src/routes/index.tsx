@@ -171,7 +171,7 @@ function Carousel() {
           />
         ))}
         {active?.caption && (
-          <p className="absolute inset-x-0 bottom-0 bg-black/50 px-4 py-2 text-sm text-white">
+          <p className="absolute inset-x-0 bottom-0 bg-primary/80 px-4 py-2 text-sm text-primary-foreground">
             {active.caption}
           </p>
         )}
