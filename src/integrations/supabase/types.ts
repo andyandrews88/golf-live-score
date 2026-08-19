@@ -14,7 +14,148 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      app_config: {
+        Row: {
+          key: string
+          value: Json
+        }
+        Insert: {
+          key: string
+          value: Json
+        }
+        Update: {
+          key?: string
+          value?: Json
+        }
+        Relationships: []
+      }
+      hole_results: {
+        Row: {
+          created_at: string
+          hole_number: number
+          id: number
+          match_id: string
+          result: string
+        }
+        Insert: {
+          created_at?: string
+          hole_number: number
+          id?: never
+          match_id: string
+          result: string
+        }
+        Update: {
+          created_at?: string
+          hole_number?: number
+          id?: never
+          match_id?: string
+          result?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hole_results_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      matches: {
+        Row: {
+          comment: string | null
+          date_label: string
+          division: string
+          feeds_into_match_id: string | null
+          feeds_into_slot: number | null
+          id: string
+          is_bye: boolean
+          match_date: string
+          p1_hcp: number | null
+          p1_name: string | null
+          p1_seed: number | null
+          p2_hcp: number | null
+          p2_name: string | null
+          p2_seed: number | null
+          result_text: string | null
+          round: string
+          status: string
+          tee_time: string
+          updated_at: string
+          winner: string | null
+        }
+        Insert: {
+          comment?: string | null
+          date_label: string
+          division: string
+          feeds_into_match_id?: string | null
+          feeds_into_slot?: number | null
+          id: string
+          is_bye?: boolean
+          match_date: string
+          p1_hcp?: number | null
+          p1_name?: string | null
+          p1_seed?: number | null
+          p2_hcp?: number | null
+          p2_name?: string | null
+          p2_seed?: number | null
+          result_text?: string | null
+          round: string
+          status?: string
+          tee_time: string
+          updated_at?: string
+          winner?: string | null
+        }
+        Update: {
+          comment?: string | null
+          date_label?: string
+          division?: string
+          feeds_into_match_id?: string | null
+          feeds_into_slot?: number | null
+          id?: string
+          is_bye?: boolean
+          match_date?: string
+          p1_hcp?: number | null
+          p1_name?: string | null
+          p1_seed?: number | null
+          p2_hcp?: number | null
+          p2_name?: string | null
+          p2_seed?: number | null
+          result_text?: string | null
+          round?: string
+          status?: string
+          tee_time?: string
+          updated_at?: string
+          winner?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "matches_feeds_into_match_id_fkey"
+            columns: ["feeds_into_match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      player_photos: {
+        Row: {
+          photo_url: string
+          player_name: string
+          updated_at: string
+        }
+        Insert: {
+          photo_url: string
+          player_name: string
+          updated_at?: string
+        }
+        Update: {
+          photo_url?: string
+          player_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
