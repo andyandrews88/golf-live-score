@@ -235,10 +235,10 @@ function IdleScreen({
 
 function PhotoBackdrop({
   onIndexChange,
-  dim = false,
+  scrim = "light",
 }: {
   onIndexChange?: (index: number) => void;
-  dim?: boolean;
+  scrim?: "none" | "light" | "heavy";
 }) {
   const { data: photos } = useCoursePhotos();
   const slides = photos ?? [];
@@ -269,7 +269,14 @@ function PhotoBackdrop({
           )}
         />
       ))}
-      <div className={cn("absolute inset-0", dim ? "bg-primary/70" : "bg-primary/28")} />
+      <div
+        className={cn(
+          "absolute inset-0 transition-opacity duration-500",
+          scrim === "none" && "opacity-0 bg-primary/28",
+          scrim === "light" && "bg-primary/28",
+          scrim === "heavy" && "bg-primary/70",
+        )}
+      />
     </div>
   );
 }
