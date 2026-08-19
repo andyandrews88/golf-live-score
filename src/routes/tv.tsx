@@ -193,7 +193,51 @@ function TvCard({ match, holes }: { match: Match; holes: HoleResult[] }) {
   );
 }
 
-function IdleScreen({ next }: { next: Match | undefined }) {
+function IdleScreen({
+  next,
+  photoIndex,
+}: {
+  next: Match | undefined;
+  photoIndex: number;
+}) {
+  const { data: photos } = useCoursePhotos();
+  const current = photos?.[photoIndex];
+
+  return (
+    <div className="absolute inset-0 flex flex-col items-center justify-center px-safe text-center">
+      <p className="font-headline text-3xl uppercase tracking-[0.4em] text-secondary">Next Up</p>
+      {next ? (
+        <>
+          <p className="mt-6 font-headline text-6xl font-bold text-primary-foreground xl:text-7xl">
+            {next.p1_name ?? "TBD"} <span className="text-secondary">vs</span>{" "}
+            {next.p2_name ?? "TBD"}
+          </p>
+          <p className="mt-4 text-2xl text-primary-foreground/85">
+            {next.round} · {DIVISION_LABEL[next.division] ?? next.division}
+          </p>
+          <p className="mt-2 text-xl text-primary-foreground/70">
+            {next.date_label} · {next.tee_time}
+          </p>
+        </>
+      ) : (
+        <p className="mt-6 font-headline text-5xl text-primary-foreground">
+          No matches scheduled
+        </p>
+      )}
+      {current?.caption && (
+        <p className="absolute bottom-8 left-0 right-0 px-safe text-lg text-primary-foreground/70">
+          {current.caption}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function PhotoBackdrop({
+  onIndexChange,
+}: {
+  onIndexChange?: (index: number) => void;
+}) {
   const { data: photos } = useCoursePhotos();
   const slides = photos ?? [];
   const [i, setI] = useState(0);
@@ -206,7 +250,9 @@ function IdleScreen({ next }: { next: Match | undefined }) {
     return () => clearInterval(id);
   }, [slides.length]);
 
-  const current = slides[Math.min(i, Math.max(slides.length - 1, 0))];
+  useEffect(() => {
+    onIndexChange?.(i);
+  }, [i, onIndexChange]);
 
   return (
     <div className="absolute inset-0">
@@ -222,32 +268,6 @@ function IdleScreen({ next }: { next: Match | undefined }) {
         />
       ))}
       <div className="absolute inset-0 bg-primary/70" />
-      <div className="absolute inset-0 flex flex-col items-center justify-center px-safe text-center">
-        <p className="font-headline text-3xl uppercase tracking-[0.4em] text-secondary">Next Up</p>
-        {next ? (
-          <>
-            <p className="mt-6 font-headline text-6xl font-bold text-primary-foreground xl:text-7xl">
-              {next.p1_name ?? "TBD"} <span className="text-secondary">vs</span>{" "}
-              {next.p2_name ?? "TBD"}
-            </p>
-            <p className="mt-4 text-2xl text-primary-foreground/85">
-              {next.round} · {DIVISION_LABEL[next.division] ?? next.division}
-            </p>
-            <p className="mt-2 text-xl text-primary-foreground/70">
-              {next.date_label} · {next.tee_time}
-            </p>
-          </>
-        ) : (
-          <p className="mt-6 font-headline text-5xl text-primary-foreground">
-            No matches scheduled
-          </p>
-        )}
-        {current?.caption && (
-          <p className="absolute bottom-8 left-0 right-0 px-safe text-lg text-primary-foreground/70">
-            {current.caption}
-          </p>
-        )}
-      </div>
     </div>
   );
 }
@@ -320,6 +340,7 @@ function TvBoard() {
   }, [live]);
 
   const [pageIndex, setPageIndex] = useState(0);
+  const [photoIndex, setPhotoIndex] = useState(0);
   useEffect(() => {
     if (pages.length <= 1) {
       setPageIndex(0);
@@ -333,8 +354,9 @@ function TvBoard() {
   const secondsAgo = dataUpdatedAt ? Math.max(0, Math.round((Date.now() - dataUpdatedAt) / 1000)) : null;
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-primary text-primary-foreground">
-      {live.length === 0 && <IdleScreen next={nextUp} />}
+    <main className="relative min-h-screen overflow-hidden text-primary-foreground">
+      <PhotoBackdrop onIndexChange={setPhotoIndex} />
+      {live.length === 0 && <IdleScreen next={nextUp} photoIndex={photoIndex} />}
 
       <div className="relative flex min-h-screen flex-col px-safe py-6">
         <header className="flex items-center justify-between gap-6">
