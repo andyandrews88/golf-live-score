@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { computeMatchScore } from "@/lib/match-score";
 import crest from "@/assets/crest.png";
-import { ALL_DIVISION_TABS, DIVISION_LIST_TEXT } from "@/lib/divisions";
+import { ALL_DIVISION_TABS, DIVISION_LIST_TEXT, DIVISION_ROUNDS } from "@/lib/divisions";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   PlayerAvatar,
@@ -276,10 +276,17 @@ function LivePage() {
 function LiveBoard() {
   const search = Route.useSearch();
   const [division, setDivision] = useState<string>(search.division);
+  const [round, setRound] = useState<string>("all");
 
   useEffect(() => {
     setDivision(search.division);
+    setRound("all");
   }, [search.division]);
+
+  const changeDivision = (d: string) => {
+    setDivision(d);
+    setRound("all");
+  };
 
   const { data, isLoading, error } = useLiveData();
 
@@ -301,9 +308,16 @@ function LiveBoard() {
 
   const liveMatches = matches.filter((m) => m.status === "live");
 
+  const roundTabs = division === "all" ? [] : (DIVISION_ROUNDS[division] ?? ROUND_ORDER);
+
+  const filtered = useMemo(
+    () => (round === "all" ? matches : matches.filter((m) => m.round === round)),
+    [matches, round],
+  );
+
   const rounds = useMemo(() => {
     const groups = new Map<string, Match[]>();
-    for (const m of matches) {
+    for (const m of filtered) {
       const arr = groups.get(m.round);
       if (arr) arr.push(m);
       else groups.set(m.round, [m]);
@@ -314,7 +328,8 @@ function LiveBoard() {
       if (ai !== bi) return (ai < 0 ? 99 : ai) - (bi < 0 ? 99 : bi);
       return a[0].localeCompare(b[0]);
     });
-  }, [matches]);
+  }, [filtered]);
+
 
   return (
     <main className="min-h-screen bg-background px-safe pb-16">
@@ -341,7 +356,7 @@ function LiveBoard() {
       </header>
 
       <div className="mx-auto max-w-3xl">
-        <Tabs value={division} onValueChange={setDivision}>
+        <Tabs value={division} onValueChange={changeDivision}>
           <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 bg-muted">
             {DIVISIONS.map((d) => (
               <TabsTrigger key={d.key} value={d.key} className="text-xs sm:text-sm">
@@ -350,6 +365,22 @@ function LiveBoard() {
             ))}
           </TabsList>
         </Tabs>
+
+        {roundTabs.length > 0 && (
+          <Tabs value={round} onValueChange={setRound} className="mt-2">
+            <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 bg-muted">
+              <TabsTrigger value="all" className="text-xs sm:text-sm">
+                All Rounds
+              </TabsTrigger>
+              {roundTabs.map((r) => (
+                <TabsTrigger key={r} value={r} className="text-xs sm:text-sm">
+                  {r}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+        )}
+
 
         {isLoading && (
           <p className="py-10 text-center text-sm text-muted-foreground">Loading matches…</p>
@@ -385,7 +416,7 @@ function LiveBoard() {
           </section>
         ))}
 
-        {!isLoading && !error && matches.length === 0 && (
+        {!isLoading && !error && filtered.length === 0 && (
           <p className="py-10 text-center text-sm text-muted-foreground">
             No matches in this division yet.
           </p>
