@@ -251,6 +251,27 @@ function MatchCard({ match, holes }: { match: Match; holes: HoleResult[] }) {
                 : "—"}
         </span>
       </div>
+
+      {isLive && holes.length > 0 && (
+        <div className="mt-2 flex flex-wrap gap-1">
+          {holes.map((h) => (
+            <span
+              key={h.hole_number}
+              className={cn(
+                "size-2 rounded-full",
+                h.result === "p1" && "bg-primary",
+                h.result === "p2" && "bg-black",
+                h.result === "half" && "bg-muted",
+              )}
+              aria-hidden
+            />
+          ))}
+        </div>
+      )}
+
+      {match.comment && (
+        <p className="mt-2 text-sm italic text-muted-foreground">{match.comment}</p>
+      )}
     </article>
   );
 }
