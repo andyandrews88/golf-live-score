@@ -36,7 +36,37 @@ export const verifyScorerPasscode = createServerFn({ method: "POST" })
   }))
   .handler(async ({ data }) => ({ ok: await checkPasscode(data.passcode) }));
 
+export const saveQuickScore = createServerFn({ method: "POST" })
+  .inputValidator((data: { passcode: string; matchId: string; thru: number; diff: number }) => {
+    const thru = Math.trunc(Number(data?.thru));
+    const diff = Math.trunc(Number(data?.diff));
+    if (!Number.isFinite(thru) || thru < 0 || thru > 18) throw new Error("Invalid holes played");
+    if (!Number.isFinite(diff) || Math.abs(diff) > thru) throw new Error("Invalid margin");
+    return {
+      passcode: String(data?.passcode ?? ""),
+      matchId: String(data?.matchId ?? ""),
+      thru,
+      diff,
+    };
+  })
+  .handler(async ({ data }) => {
+    const db = await requireScorer(data.passcode);
+    const now = new Date().toISOString();
+    const { error } = await db
+      .from("matches")
+      .update({
+        quick_thru: data.thru,
+        quick_diff: data.diff,
+        quick_updated_at: now,
+        updated_at: now,
+      })
+      .eq("id", data.matchId);
+    if (error) throw error;
+    return { ok: true as const, updatedAt: now };
+  });
+
 export const recordHole = createServerFn({ method: "POST" })
+
   .inputValidator((data: { passcode: string; matchId: string; result: string }) => {
     const result = String(data?.result ?? "");
     if (!["p1", "p2", "half"].includes(result)) throw new Error("Invalid result");

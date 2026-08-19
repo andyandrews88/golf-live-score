@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { computeMatchScore } from "@/lib/match-score";
 import { DIVISION_LABELS, DIVISION_ORDER } from "@/lib/divisions";
 import {
   PlayerAvatar,
@@ -49,9 +50,17 @@ type Match = {
   p2_hcp: number | null;
   status: string;
   comment: string | null;
+  quick_thru: number | null;
+  quick_diff: number | null;
+  quick_updated_at: string | null;
 };
 
-type HoleResult = { match_id: string; hole_number: number; result: string };
+type HoleResult = {
+  match_id: string;
+  hole_number: number;
+  result: string;
+  created_at: string;
+};
 
 
 const PAGE_SIZE = 4;
@@ -66,7 +75,7 @@ async function fetchData() {
       .order("sort_order", { ascending: true }),
     supabase
       .from("hole_results")
-      .select("match_id, hole_number, result")
+      .select("match_id, hole_number, result, created_at")
       .order("hole_number", { ascending: true }),
   ]);
   if (matchesRes.error) throw matchesRes.error;
@@ -74,19 +83,6 @@ async function fetchData() {
   return {
     matches: (matchesRes.data ?? []) as Match[],
     holes: (holesRes.data ?? []) as HoleResult[],
-  };
-}
-
-function computeScore(holes: HoleResult[]) {
-  const p1 = holes.filter((h) => h.result === "p1").length;
-  const p2 = holes.filter((h) => h.result === "p2").length;
-  const thru = holes.length;
-  const diff = p1 - p2;
-  if (thru === 0) return { text: "LIVE", leader: null as 1 | 2 | null };
-  if (diff === 0) return { text: `ALL SQUARE THRU ${thru}`, leader: null as 1 | 2 | null };
-  return {
-    text: `${Math.abs(diff)} UP THRU ${thru}`,
-    leader: (diff > 0 ? 1 : 2) as 1 | 2,
   };
 }
 
@@ -138,7 +134,11 @@ function PlayerLine({
 }
 
 function TvCard({ match, holes }: { match: Match; holes: HoleResult[] }) {
-  const score = computeScore(holes);
+  const score = computeMatchScore(holes, {
+    thru: match.quick_thru,
+    diff: match.quick_diff,
+    updatedAt: match.quick_updated_at,
+  });
   return (
     <article className="flex flex-col rounded-2xl border border-primary-foreground/20 bg-primary/85 p-6 shadow-2xl backdrop-blur-[2px]">
       <p className="font-headline text-lg uppercase tracking-widest text-secondary">
@@ -164,7 +164,7 @@ function TvCard({ match, holes }: { match: Match; holes: HoleResult[] }) {
         {score.text}
       </p>
 
-      {holes.length > 0 && (
+      {score.source === "holes" && holes.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-1.5">
           {holes.map((h) => (
             <span

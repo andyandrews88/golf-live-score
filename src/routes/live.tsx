@@ -5,6 +5,7 @@ import { Instagram } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { computeMatchScore } from "@/lib/match-score";
 import crest from "@/assets/crest.png";
 import { ALL_DIVISION_TABS, DIVISION_LIST_TEXT } from "@/lib/divisions";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -60,9 +61,17 @@ type Match = {
   result_text: string | null;
   winner: string | null;
   comment: string | null;
+  quick_thru: number | null;
+  quick_diff: number | null;
+  quick_updated_at: string | null;
 };
 
-type HoleResult = { match_id: string; hole_number: number; result: string };
+type HoleResult = {
+  match_id: string;
+  hole_number: number;
+  result: string;
+  created_at: string;
+};
 
 const DIVISIONS = ALL_DIVISION_TABS;
 
@@ -74,7 +83,7 @@ async function fetchData() {
       .from("matches")
       .select("*")
       .order("sort_order", { ascending: true }),
-    supabase.from("hole_results").select("match_id, hole_number, result"),
+    supabase.from("hole_results").select("match_id, hole_number, result, created_at"),
   ]);
   if (matchesRes.error) throw matchesRes.error;
   if (holesRes.error) throw holesRes.error;
@@ -105,28 +114,6 @@ function useLiveData() {
   }, [queryClient]);
 
   return query;
-}
-
-type Score = {
-  thru: number;
-  diff: number;
-  text: string;
-  leader: 1 | 2 | null;
-};
-
-function computeScore(holes: HoleResult[]): Score {
-  const p1 = holes.filter((h) => h.result === "p1").length;
-  const p2 = holes.filter((h) => h.result === "p2").length;
-  const thru = holes.length;
-  const diff = p1 - p2;
-  if (thru === 0) return { thru, diff, text: "LIVE", leader: null };
-  if (diff === 0) return { thru, diff, text: `ALL SQUARE THRU ${thru}`, leader: null };
-  return {
-    thru,
-    diff,
-    text: `${Math.abs(diff)} UP THRU ${thru}`,
-    leader: diff > 0 ? 1 : 2,
-  };
 }
 
 function StatusPill({ status }: { status: string }) {
@@ -192,7 +179,11 @@ function PlayerRow({
 }
 
 function MatchCard({ match, holes }: { match: Match; holes: HoleResult[] }) {
-  const score = computeScore(holes);
+  const score = computeMatchScore(holes, {
+    thru: match.quick_thru,
+    diff: match.quick_diff,
+    updatedAt: match.quick_updated_at,
+  });
   const isCompleted = match.status === "completed";
   const isLive = match.status === "live";
 
@@ -250,7 +241,7 @@ function MatchCard({ match, holes }: { match: Match; holes: HoleResult[] }) {
         </span>
       </div>
 
-      {isLive && holes.length > 0 && (
+      {isLive && score.source === "holes" && holes.length > 0 && (
         <div className="mt-2 flex flex-wrap gap-1">
           {holes.map((h) => (
             <span
