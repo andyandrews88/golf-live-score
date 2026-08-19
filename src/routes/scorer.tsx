@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { verifyScorerPasscode } from "@/lib/scorer.functions";
+import { getScorerPasscode, setScorerPasscode } from "@/lib/scorer-session";
 
 export const Route = createFileRoute("/scorer")({
   head: () => ({
@@ -31,7 +32,7 @@ export const Route = createFileRoute("/scorer")({
   component: ScorerPage,
 });
 
-const SESSION_KEY = "rcgc-scorer-unlocked";
+
 const ROUND_ORDER = ["Round of 16", "Quarter-Final", "Semi-Final", "Final"];
 
 type Match = {
@@ -78,7 +79,7 @@ function PasscodeGate({ onUnlock }: { onUnlock: () => void }) {
     try {
       const { ok } = await verify({ data: { passcode } });
       if (ok) {
-        sessionStorage.setItem(SESSION_KEY, "1");
+        setScorerPasscode(passcode);
         onUnlock();
       } else {
         setError(true);
@@ -238,7 +239,7 @@ function ScorerPage() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    setUnlocked(sessionStorage.getItem(SESSION_KEY) === "1");
+    setUnlocked(Boolean(getScorerPasscode()));
     setReady(true);
   }, []);
 
