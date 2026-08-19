@@ -1,15 +1,22 @@
-import { useEffect, useMemo, useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Lock } from "lucide-react";
+import { Lock, Upload } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { verifyScorerPasscode } from "@/lib/scorer.functions";
+import { uploadPlayerPhoto } from "@/lib/player-photos.functions";
 import { getScorerPasscode, setScorerPasscode } from "@/lib/scorer-session";
+import {
+  PlayerAvatar,
+  PlayerProfileProvider,
+  usePlayerProfile,
+} from "@/components/player-profile";
 
 export const Route = createFileRoute("/scorer")({
   head: () => ({
@@ -31,7 +38,6 @@ export const Route = createFileRoute("/scorer")({
   }),
   component: ScorerPage,
 });
-
 
 const ROUND_ORDER = ["Round of 16", "Quarter-Final", "Semi-Final", "Final"];
 
@@ -123,13 +129,55 @@ function PasscodeGate({ onUnlock }: { onUnlock: () => void }) {
 async function fetchMatches() {
   const { data, error } = await supabase
     .from("matches")
-    .select("id, division, round, date_label, tee_time, match_date, sort_order, p1_name, p2_name, status")
+    .select(
+      "id, division, round, date_label, tee_time, match_date, sort_order, p1_name, p2_name, status",
+    )
     .order("sort_order", { ascending: true });
   if (error) throw error;
   return (data ?? []) as Match[];
 }
 
+function divisionLabel(division: string) {
+  return division === "men"
+    ? "Men's Championship"
+    : division === "silver"
+      ? "Ladies Silver"
+      : division === "bronze"
+        ? "Ladies Bronze Cup"
+        : division;
+}
+
+function PlayerChip({ name }: { name: string | null }) {
+  const profile = usePlayerProfile();
+  if (!name) {
+    return <span className="font-headline text-lg font-medium text-muted-foreground">TBD</span>;
+  }
+  return (
+    <span
+      role="button"
+      tabIndex={0}
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        profile?.open(name);
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          e.stopPropagation();
+          profile?.open(name);
+        }
+      }}
+      className="inline-flex items-center gap-2 rounded-md px-1 py-0.5 hover:bg-muted"
+    >
+      <PlayerAvatar name={name} size="sm" />
+      <span className="font-headline text-lg font-medium text-foreground">{name}</span>
+    </span>
+  );
+}
+
 function MatchList() {
+  const navigate = useNavigate();
   const { data, isLoading, error } = useQuery({
     queryKey: ["scorer-matches"],
     queryFn: fetchMatches,
@@ -151,99 +199,235 @@ function MatchList() {
   }, [data]);
 
   return (
-    <main className="min-h-screen bg-background px-safe pb-16">
-      <header className="mx-auto max-w-3xl pt-8 pb-4">
-        <h1 className="font-headline text-3xl font-bold text-primary">Scorer Tools</h1>
-        <p className="text-sm text-muted-foreground">Select a match to score</p>
-      </header>
+    <div>
+      {isLoading && (
+        <p className="py-10 text-center text-sm text-muted-foreground">Loading matches…</p>
+      )}
+      {error && (
+        <p className="py-10 text-center text-sm text-destructive">Could not load matches.</p>
+      )}
 
-      <div className="mx-auto max-w-3xl">
-        {isLoading && (
-          <p className="py-10 text-center text-sm text-muted-foreground">Loading matches…</p>
-        )}
-        {error && (
-          <p className="py-10 text-center text-sm text-destructive">Could not load matches.</p>
-        )}
-
-        {rounds.map(([round, matches]) => (
-          <section key={round} className="mt-6">
-            <h2 className="mb-3 font-headline text-xl font-bold text-foreground">{round}</h2>
-            <div className="grid gap-3">
-              {matches.map((m) => {
-                const ready = Boolean(m.p1_name && m.p2_name);
-                const body = (
-                  <>
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="font-headline text-sm font-semibold uppercase tracking-wide text-primary">
-                        {m.division === "men"
-                          ? "Men's Championship"
-                          : m.division === "silver"
-                            ? "Ladies Silver"
-                            : m.division === "bronze"
-                              ? "Ladies Bronze Cup"
-                              : m.division}
-                      </span>
-                      <StatusPill status={m.status} />
-                    </div>
-                    <div className="mt-2 space-y-0.5">
-                      <p className="font-headline text-lg font-medium text-foreground">
-                        {m.p1_name ?? "TBD"}
-                      </p>
-                      <p className="font-headline text-lg font-medium text-foreground">
-                        {m.p2_name ?? "TBD"}
-                      </p>
-                    </div>
-                    <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
-                      <span>
-                        {m.date_label} · {m.tee_time}
-                      </span>
-                      {!ready && (
-                        <span className="inline-flex items-center gap-1">
-                          <Lock className="size-3" aria-hidden />
-                          Locked
-                        </span>
-                      )}
-                    </div>
-                  </>
-                );
-
-                return ready ? (
-                  <Link
-                    key={m.id}
-                    to="/scorer/$matchId"
-                    params={{ matchId: m.id }}
-                    className="block rounded-xl border border-border bg-card p-4 text-left shadow-sm transition-colors hover:border-primary"
-                  >
-                    {body}
-                  </Link>
-                ) : (
-                  <div
-                    key={m.id}
-                    aria-disabled="true"
-                    className="rounded-xl border border-border bg-muted/40 p-4 opacity-60"
-                  >
-                    {body}
+      {rounds.map(([round, matches]) => (
+        <section key={round} className="mt-6">
+          <h2 className="mb-3 font-headline text-xl font-bold text-foreground">{round}</h2>
+          <div className="grid gap-3">
+            {matches.map((m) => {
+              const ready = Boolean(m.p1_name && m.p2_name);
+              return (
+                <div
+                  key={m.id}
+                  role={ready ? "button" : undefined}
+                  tabIndex={ready ? 0 : undefined}
+                  aria-disabled={ready ? undefined : "true"}
+                  onClick={
+                    ready
+                      ? () => navigate({ to: "/scorer/$matchId", params: { matchId: m.id } })
+                      : undefined
+                  }
+                  onKeyDown={
+                    ready
+                      ? (e) => {
+                          if (e.key === "Enter") {
+                            navigate({ to: "/scorer/$matchId", params: { matchId: m.id } });
+                          }
+                        }
+                      : undefined
+                  }
+                  className={cn(
+                    "rounded-xl border border-border p-4 text-left shadow-sm transition-colors",
+                    ready
+                      ? "cursor-pointer bg-card hover:border-primary"
+                      : "bg-muted/40 opacity-60",
+                  )}
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="font-headline text-sm font-semibold uppercase tracking-wide text-primary">
+                      {divisionLabel(m.division)}
+                    </span>
+                    <StatusPill status={m.status} />
                   </div>
-                );
-              })}
+                  <div className="mt-2 space-y-1">
+                    <div>
+                      <PlayerChip name={m.p1_name} />
+                    </div>
+                    <div>
+                      <PlayerChip name={m.p2_name} />
+                    </div>
+                  </div>
+                  <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+                    <span>
+                      {m.date_label} · {m.tee_time}
+                    </span>
+                    {!ready && (
+                      <span className="inline-flex items-center gap-1">
+                        <Lock className="size-3" aria-hidden />
+                        Locked
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      ))}
+    </div>
+  );
+}
+
+async function resizeToSquare(file: File, size = 300): Promise<string> {
+  const bitmap = await createImageBitmap(file);
+  const side = Math.min(bitmap.width, bitmap.height);
+  const sx = (bitmap.width - side) / 2;
+  const sy = (bitmap.height - side) / 2;
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Canvas unavailable");
+  ctx.drawImage(bitmap, sx, sy, side, side, 0, 0, size, size);
+  bitmap.close?.();
+  return canvas.toDataURL("image/jpeg", 0.85);
+}
+
+function PhotosTab({ passcode }: { passcode: string }) {
+  const queryClient = useQueryClient();
+  const profile = usePlayerProfile();
+  const upload = useServerFn(uploadPlayerPhoto);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const [target, setTarget] = useState<string | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [message, setMessage] = useState<{ name: string; text: string; error: boolean } | null>(
+    null,
+  );
+
+  const { data: matches } = useQuery({ queryKey: ["scorer-matches"], queryFn: fetchMatches });
+
+  const players = useMemo(() => {
+    const set = new Set<string>();
+    for (const m of matches ?? []) {
+      if (m.p1_name) set.add(m.p1_name);
+      if (m.p2_name) set.add(m.p2_name);
+    }
+    return [...set].sort((a, b) => a.localeCompare(b));
+  }, [matches]);
+
+  async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    const name = target;
+    e.target.value = "";
+    if (!file || !name) return;
+    setBusy(name);
+    setMessage(null);
+    try {
+      const dataUrl = await resizeToSquare(file);
+      await upload({ data: { passcode, playerName: name, dataUrl } });
+      await queryClient.invalidateQueries({ queryKey: ["player-photos"] });
+      setMessage({ name, text: "Photo saved", error: false });
+    } catch {
+      setMessage({ name, text: "Upload failed — try again", error: true });
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  return (
+    <div className="mt-6">
+      <p className="text-sm text-muted-foreground">
+        Tap a player to upload a photo. Images are cropped to a square automatically.
+      </p>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={onFile}
+        aria-label="Choose player photo"
+      />
+      <div className="mt-4 grid gap-2">
+        {players.map((name) => (
+          <div
+            key={name}
+            className="flex items-center gap-3 rounded-xl border border-border bg-card p-3"
+          >
+            <button type="button" onClick={() => profile?.open(name)} aria-label={`View ${name}`}>
+              <PlayerAvatar name={name} size="md" />
+            </button>
+            <div className="min-w-0 flex-1">
+              <p className="truncate font-headline text-lg font-medium text-foreground">{name}</p>
+              {message?.name === name && (
+                <p
+                  className={cn(
+                    "text-xs",
+                    message.error ? "text-destructive" : "text-primary",
+                  )}
+                >
+                  {message.text}
+                </p>
+              )}
             </div>
-          </section>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={busy === name}
+              onClick={() => {
+                setTarget(name);
+                inputRef.current?.click();
+              }}
+            >
+              <Upload className="size-4" aria-hidden />
+              {busy === name ? "Uploading…" : "Upload"}
+            </Button>
+          </div>
         ))}
+        {players.length === 0 && (
+          <p className="py-10 text-center text-sm text-muted-foreground">No players yet.</p>
+        )}
       </div>
-    </main>
+    </div>
+  );
+}
+
+function ScorerHome({ passcode }: { passcode: string }) {
+  return (
+    <PlayerProfileProvider>
+      <main className="min-h-screen bg-background px-safe pb-16">
+        <header className="mx-auto max-w-3xl pt-8 pb-4">
+          <h1 className="font-headline text-3xl font-bold text-primary">Scorer Tools</h1>
+          <p className="text-sm text-muted-foreground">Select a match to score</p>
+        </header>
+
+        <div className="mx-auto max-w-3xl">
+          <Tabs defaultValue="matches">
+            <TabsList className="grid w-full grid-cols-2 bg-muted">
+              <TabsTrigger value="matches">Matches</TabsTrigger>
+              <TabsTrigger value="photos">Photos</TabsTrigger>
+            </TabsList>
+            <TabsContent value="matches">
+              <MatchList />
+            </TabsContent>
+            <TabsContent value="photos">
+              <PhotosTab passcode={passcode} />
+            </TabsContent>
+          </Tabs>
+        </div>
+      </main>
+    </PlayerProfileProvider>
   );
 }
 
 function ScorerPage() {
-  const [unlocked, setUnlocked] = useState(false);
+  const [passcode, setPasscode] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    setUnlocked(Boolean(getScorerPasscode()));
+    setPasscode(getScorerPasscode());
     setReady(true);
   }, []);
 
   if (!ready) return <main className="min-h-screen bg-background" />;
-  if (!unlocked) return <PasscodeGate onUnlock={() => setUnlocked(true)} />;
-  return <MatchList />;
+  if (!passcode)
+    return <PasscodeGate onUnlock={() => setPasscode(getScorerPasscode())} />;
+  return <ScorerHome passcode={passcode} />;
 }
