@@ -198,7 +198,7 @@ function MatchCard({ match, holes }: { match: Match; holes: HoleResult[] }) {
             highlighted={
               isLive
                 ? score.leader === 1
-                : isCompleted && match.winner === match.p1_name
+                : isCompleted && match.winner === "p1"
             }
           />
         )}
@@ -210,7 +210,7 @@ function MatchCard({ match, holes }: { match: Match; holes: HoleResult[] }) {
             highlighted={
               isLive
                 ? score.leader === 2
-                : isCompleted && match.winner === match.p2_name
+                : isCompleted && match.winner === "p2"
             }
           />
         )}
