@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { Instagram } from "lucide-react";
 
 import crest from "@/assets/crest.png";
 import { useCoursePhotos } from "@/lib/course-photos";
