@@ -7,6 +7,7 @@ import { Undo2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import crest from "@/assets/crest.png";
+import { divisionLabel } from "@/lib/divisions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";

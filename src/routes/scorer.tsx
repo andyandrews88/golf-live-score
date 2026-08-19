@@ -7,6 +7,7 @@ import { ArrowDown, ArrowUp, Lock, Trash2, Upload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import crest from "@/assets/crest.png";
+import { divisionLabel } from "@/lib/divisions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
