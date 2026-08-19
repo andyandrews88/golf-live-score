@@ -7,6 +7,7 @@ import { ArrowDown, ArrowUp, Lock, Trash2, Upload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import crest from "@/assets/crest.png";
+import { divisionLabel } from "@/lib/divisions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -154,16 +155,6 @@ async function fetchMatches() {
     .order("sort_order", { ascending: true });
   if (error) throw error;
   return (data ?? []) as Match[];
-}
-
-function divisionLabel(division: string) {
-  return division === "men"
-    ? "Men's Championship"
-    : division === "silver"
-      ? "Ladies Silver"
-      : division === "bronze"
-        ? "Ladies Bronze Cup"
-        : division;
 }
 
 function PlayerChip({ name }: { name: string | null }) {
