@@ -4,6 +4,11 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import {
+  PlayerAvatar,
+  PlayerProfileProvider,
+  usePlayerProfile,
+} from "@/components/player-profile";
 import crest from "@/assets/crest.png";
 import course1 from "@/assets/course-1.jpg";
 import course2 from "@/assets/course-2.jpg";
@@ -112,17 +117,25 @@ function PlayerLine({
   hcp: number | null;
   leading: boolean;
 }) {
+  const profile = usePlayerProfile();
   if (!name) return null;
   return (
-    <div className="flex items-baseline justify-between gap-4">
-      <span
-        className={cn(
-          "font-headline text-3xl leading-tight xl:text-4xl",
-          leading ? "font-bold text-secondary" : "font-medium text-primary-foreground",
-        )}
+    <div className="flex items-center justify-between gap-4">
+      <button
+        type="button"
+        onClick={() => profile?.open(name)}
+        className="flex min-w-0 items-center gap-3 text-left"
       >
-        {name}
-      </span>
+        <PlayerAvatar name={name} size="lg" tone="dark" />
+        <span
+          className={cn(
+            "truncate font-headline text-3xl leading-tight xl:text-4xl",
+            leading ? "font-bold text-secondary" : "font-medium text-primary-foreground",
+          )}
+        >
+          {name}
+        </span>
+      </button>
       <span className="shrink-0 text-base text-primary-foreground/70">
         {seed != null && <>#{seed}</>}
         {seed != null && hcp != null && " · "}
@@ -232,6 +245,14 @@ function IdleScreen({ next }: { next: Match | undefined }) {
 }
 
 function TvPage() {
+  return (
+    <PlayerProfileProvider>
+      <TvBoard />
+    </PlayerProfileProvider>
+  );
+}
+
+function TvBoard() {
   const queryClient = useQueryClient();
   const { data, dataUpdatedAt } = useQuery({ queryKey: ["tv-board"], queryFn: fetchData });
   useTick(1000);
