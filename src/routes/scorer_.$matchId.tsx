@@ -18,6 +18,7 @@ import {
 import {
   completeMatch,
   recordHole,
+  resetMatchToUpcoming,
   saveMatchComment,
   startMatch,
   undoLastHole,
@@ -125,10 +126,12 @@ function Scoring({ matchId, passcode }: { matchId: string; passcode: string }) {
   const start = useServerFn(startMatch);
   const complete = useServerFn(completeMatch);
   const saveComment = useServerFn(saveMatchComment);
+  const resetToUpcoming = useServerFn(resetMatchToUpcoming);
 
   const [busy, setBusy] = useState(false);
   const [decided, setDecided] = useState<{ winner: "p1" | "p2"; label: string } | null>(null);
   const [manualOpen, setManualOpen] = useState(false);
+  const [resetOpen, setResetOpen] = useState(false);
   const [manualWinner, setManualWinner] = useState<"p1" | "p2">("p1");
   const [manualLabel, setManualLabel] = useState("");
   const [comment, setComment] = useState<string | null>(null);
@@ -195,6 +198,18 @@ function Scoring({ matchId, passcode }: { matchId: string; passcode: string }) {
     setBusy(true);
     try {
       await start({ data: { passcode, matchId } });
+      await refresh();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function onReset() {
+    if (busy) return;
+    setBusy(true);
+    try {
+      await resetToUpcoming({ data: { passcode, matchId } });
+      setResetOpen(false);
       await refresh();
     } finally {
       setBusy(false);
@@ -357,6 +372,32 @@ function Scoring({ matchId, passcode }: { matchId: string; passcode: string }) {
             <Undo2 className="mr-2 size-4" aria-hidden />
             Undo last hole
           </Button>
+          {match.status === "live" && thru === 0 && (
+            <div className="text-center">
+              {resetOpen ? (
+                <div className="rounded-lg border border-border bg-card p-4">
+                  <p className="text-sm text-foreground">Reset this match back to Upcoming?</p>
+                  <div className="mt-3 flex gap-2">
+                    <Button size="sm" variant="outline" className="flex-1" disabled={busy} onClick={onReset}>
+                      Yes, reset
+                    </Button>
+                    <Button size="sm" variant="ghost" className="flex-1" onClick={() => setResetOpen(false)}>
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => setResetOpen(true)}
+                  className="text-xs text-muted-foreground underline underline-offset-4 hover:text-foreground disabled:opacity-50"
+                >
+                  Reset to Upcoming
+                </button>
+              )}
+            </div>
+          )}
         </div>
       ) : null}
 
