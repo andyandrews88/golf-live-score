@@ -6,6 +6,7 @@ import { Undo2 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import crest from "@/assets/crest.png";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -290,9 +291,21 @@ function Scoring({ matchId, passcode }: { matchId: string; passcode: string }) {
   return (
     <main className="min-h-screen bg-background px-safe pb-20">
       <header className="mx-auto max-w-xl pt-6">
-        <Link to="/scorer" className="text-sm text-muted-foreground underline">
-          ← All matches
-        </Link>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <img
+              src={crest}
+              alt="Royal Colombo Golf Club crest"
+              className="size-10 shrink-0 object-contain"
+            />
+            <p className="font-headline text-xl font-bold leading-tight text-primary">
+              RCGC 105th Championship
+            </p>
+          </div>
+          <Link to="/scorer" className="text-sm text-muted-foreground underline">
+            ← All matches
+          </Link>
+        </div>
         <p className="mt-3 font-headline text-sm font-semibold uppercase tracking-wide text-primary">
           {match.round} ·{" "}
           {match.division === "men"

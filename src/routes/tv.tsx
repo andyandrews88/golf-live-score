@@ -377,13 +377,8 @@ function TvBoard() {
       />
       {!hasLive && <IdleScreen next={nextUp} photoIndex={photoIndex} />}
 
-      <div
-        className={cn(
-          "relative flex min-h-screen flex-col px-safe py-6 transition-opacity duration-500",
-          isBreather && "pointer-events-none opacity-0",
-        )}
-      >
-        <header className="flex items-center justify-between gap-6">
+      <div className="relative flex min-h-screen flex-col">
+        <header className="flex items-center justify-between gap-6 bg-primary/95 px-safe py-6 shadow-2xl backdrop-blur-sm">
           <div className="flex items-center gap-4">
             <img src={crest} alt="" width={512} height={512} className="size-16 xl:size-20" />
             <h1 className="font-headline text-3xl font-bold tracking-wide xl:text-4xl">
@@ -401,40 +396,47 @@ function TvBoard() {
           </div>
         </header>
 
-        {live.length > 0 && page && (
-          <section className="mt-6 flex flex-1 flex-col">
-            {page.heading && (
-              <h2 className="mb-4 font-headline text-2xl font-bold uppercase tracking-widest text-secondary">
-                {page.heading}
-              </h2>
-            )}
-            <div
-              className={cn(
-                "grid flex-1 gap-5",
-                page.matches.length > 1 ? "grid-cols-2" : "grid-cols-1",
+        <div
+          className={cn(
+            "flex flex-1 flex-col px-safe pb-6 transition-opacity duration-500",
+            isBreather && "pointer-events-none opacity-0",
+          )}
+        >
+          {live.length > 0 && page && (
+            <section className="mt-6 flex flex-1 flex-col">
+              {page.heading && (
+                <h2 className="mb-4 font-headline text-2xl font-bold uppercase tracking-widest text-secondary">
+                  {page.heading}
+                </h2>
               )}
-            >
-              {page.matches.map((m) => (
-                <TvCard key={m.id} match={m} holes={holesByMatch.get(m.id) ?? []} />
-              ))}
-            </div>
-
-            {pages.length > 1 && (
-              <div className="mt-5 flex justify-center gap-2">
-                {pages.map((p, i) => (
-                  <span
-                    key={p.heading ?? i}
-                    className={cn(
-                      "size-3 rounded-full",
-                      i === pageIndex ? "bg-secondary" : "bg-primary-foreground/30",
-                    )}
-                    aria-hidden
-                  />
+              <div
+                className={cn(
+                  "grid flex-1 gap-5",
+                  page.matches.length > 1 ? "grid-cols-2" : "grid-cols-1",
+                )}
+              >
+                {page.matches.map((m) => (
+                  <TvCard key={m.id} match={m} holes={holesByMatch.get(m.id) ?? []} />
                 ))}
               </div>
-            )}
-          </section>
-        )}
+
+              {pages.length > 1 && (
+                <div className="mt-5 flex justify-center gap-2">
+                  {pages.map((p, i) => (
+                    <span
+                      key={p.heading ?? i}
+                      className={cn(
+                        "size-3 rounded-full",
+                        i === pageIndex ? "bg-secondary" : "bg-primary-foreground/30",
+                      )}
+                      aria-hidden
+                    />
+                  ))}
+                </div>
+              )}
+            </section>
+          )}
+        </div>
       </div>
     </main>
   );

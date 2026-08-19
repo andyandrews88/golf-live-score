@@ -6,6 +6,7 @@ import { ArrowDown, ArrowUp, Lock, Trash2, Upload } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import crest from "@/assets/crest.png";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -110,8 +111,20 @@ function PasscodeGate({ onUnlock }: { onUnlock: () => void }) {
         onSubmit={onSubmit}
         className="w-full max-w-sm rounded-xl border border-border bg-card p-6 shadow-sm"
       >
-        <h1 className="font-headline text-2xl font-bold text-primary">Scorer Tools</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <div className="flex items-center gap-3">
+          <img
+            src={crest}
+            alt="Royal Colombo Golf Club crest"
+            className="size-12 shrink-0 object-contain"
+          />
+          <div>
+            <h1 className="font-headline text-2xl font-bold text-primary">
+              RCGC 105th Championship
+            </h1>
+            <p className="text-sm text-muted-foreground">Scorer Tools</p>
+          </div>
+        </div>
+        <p className="mt-3 text-sm text-muted-foreground">
           Enter the scorer passcode to continue.
         </p>
         <Input
@@ -560,9 +573,18 @@ function ScorerHome({ passcode }: { passcode: string }) {
   return (
     <PlayerProfileProvider>
       <main className="min-h-screen bg-background px-safe pb-16">
-        <header className="mx-auto max-w-3xl pt-8 pb-4">
-          <h1 className="font-headline text-3xl font-bold text-primary">Scorer Tools</h1>
-          <p className="text-sm text-muted-foreground">Select a match to score</p>
+        <header className="mx-auto flex max-w-3xl items-center gap-3 pt-8 pb-4">
+          <img
+            src={crest}
+            alt="Royal Colombo Golf Club crest"
+            className="size-12 shrink-0 object-contain sm:size-14"
+          />
+          <div>
+            <h1 className="font-headline text-3xl font-bold text-primary">
+              RCGC 105th Championship
+            </h1>
+            <p className="text-sm text-muted-foreground">Scorer Tools · select a match</p>
+          </div>
         </header>
 
         <div className="mx-auto max-w-3xl">
