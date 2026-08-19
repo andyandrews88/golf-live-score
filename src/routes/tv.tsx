@@ -379,7 +379,7 @@ function TvBoard() {
 
       <div
         className={cn(
-          "relative flex min-h-screen flex-col px-safe py-6",
+          "relative flex min-h-screen flex-col px-safe py-6 transition-opacity duration-500",
           isBreather && "pointer-events-none opacity-0",
         )}
       >
