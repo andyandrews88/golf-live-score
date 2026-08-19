@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import crest from "@/assets/crest.png";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   PlayerAvatar,
@@ -329,12 +330,19 @@ function LiveBoard() {
 
   return (
     <main className="min-h-screen bg-background px-safe pb-16">
-      <header className="mx-auto flex max-w-3xl items-start justify-between pt-8 pb-4">
-        <div>
-          <h1 className="font-headline text-3xl font-bold text-primary">
-            RCGC 105th Championship
-          </h1>
-          <p className="text-sm text-muted-foreground">Live leaderboard</p>
+      <header className="mx-auto flex max-w-3xl items-start justify-between gap-3 pt-8 pb-4">
+        <div className="flex items-center gap-3">
+          <img
+            src={crest}
+            alt="Royal Colombo Golf Club crest"
+            className="size-12 shrink-0 object-contain sm:size-14"
+          />
+          <div>
+            <h1 className="font-headline text-3xl font-bold text-primary">
+              RCGC 105th Championship
+            </h1>
+            <p className="text-sm text-muted-foreground">Live leaderboard</p>
+          </div>
         </div>
         <Link
           to="/"
