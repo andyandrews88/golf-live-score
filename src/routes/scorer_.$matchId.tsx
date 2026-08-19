@@ -432,9 +432,23 @@ function Scoring({ matchId, passcode }: { matchId: string; passcode: string }) {
           className="mt-2"
           placeholder="e.g. Long putt on 7 to halve the hole"
         />
-        <p className="mt-1 text-right text-xs text-muted-foreground">
-          {(comment ?? "").length}/140
-        </p>
+        <div className="mt-1 flex items-center justify-between text-xs">
+          <span
+            className={cn(
+              saveStatus === "saved" && "text-primary",
+              saveStatus === "error" && "text-destructive font-medium",
+              saveStatus === "idle" && "text-muted-foreground",
+              saveStatus === "saving" && "text-muted-foreground",
+            )}
+            aria-live="polite"
+          >
+            {saveStatus === "saving" && "Saving…"}
+            {saveStatus === "saved" && "Saved"}
+            {saveStatus === "error" && "Couldn't save — try again"}
+            {saveStatus === "idle" && "\u00A0"}
+          </span>
+          <span className="text-muted-foreground">{(comment ?? "").length}/140</span>
+        </div>
       </section>
     </main>
   );
