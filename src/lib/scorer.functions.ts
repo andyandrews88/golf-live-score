@@ -196,18 +196,17 @@ export const undoMatchCompletion = createServerFn({ method: "POST" })
       }
 
       if (match.feeds_into_slot === 1 || match.feeds_into_slot === 2) {
-        const slot = match.feeds_into_slot;
+        const clearPatch =
+          match.feeds_into_slot === 1
+            ? { p1_name: null, p1_seed: null, p1_hcp: null }
+            : { p2_name: null, p2_seed: null, p2_hcp: null };
         const { error: clearErr } = await db
           .from("matches")
-          .update({
-            [`p${slot}_name`]: null,
-            [`p${slot}_seed`]: null,
-            [`p${slot}_hcp`]: null,
-            updated_at: new Date().toISOString(),
-          })
+          .update({ ...clearPatch, updated_at: new Date().toISOString() })
           .eq("id", match.feeds_into_match_id);
         if (clearErr) throw clearErr;
       }
+
     }
 
     const { error } = await db
