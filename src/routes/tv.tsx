@@ -14,6 +14,7 @@ import {
 import crest from "@/assets/crest.png";
 import { useCoursePhotos } from "@/lib/course-photos";
 import { useRefetchOnVisible } from "@/lib/use-refetch-on-visible";
+import { fetchStimp, fetchWeather } from "@/lib/weather";
 
 export const Route = createFileRoute("/tv")({
   head: () => ({
@@ -189,6 +190,35 @@ function TvCard({ match, holes }: { match: Match; holes: HoleResult[] }) {
   );
 }
 
+function IdleWeather() {
+  const { data: weather } = useQuery({
+    queryKey: ["colombo-weather"],
+    queryFn: fetchWeather,
+    retry: false,
+    staleTime: 1000 * 60 * 30,
+  });
+  const { data: stimp } = useQuery({
+    queryKey: ["course-stimp"],
+    queryFn: fetchStimp,
+    retry: false,
+    staleTime: 1000 * 60 * 5,
+  });
+
+  if (!weather) return null;
+
+  const parts: string[] = [
+    `${weather.high}° / ${weather.low}°`,
+    weather.label,
+  ];
+  if (weather.wind !== null) parts.push(`${Math.round(weather.wind)} km/h wind`);
+  if (weather.humidity !== null) parts.push(`${Math.round(weather.humidity)}% humidity`);
+  if (stimp) parts.push(`Stimp: ${stimp}`);
+
+  return (
+    <p className="mt-4 text-2xl text-primary-foreground/85">{parts.join(" · ")}</p>
+  );
+}
+
 function IdleScreen({
   next,
   photoIndex,
@@ -202,6 +232,7 @@ function IdleScreen({
   return (
     <div className="absolute inset-0 flex flex-col items-center justify-center px-safe text-center">
       <p className="font-headline text-3xl uppercase tracking-[0.4em] text-secondary">Next Up</p>
+      <IdleWeather />
       {next ? (
         <>
           <p className="mt-6 font-headline text-6xl font-bold text-primary-foreground xl:text-7xl">
