@@ -276,6 +276,7 @@ function Scoring({ matchId, passcode }: { matchId: string; passcode: string }) {
       window.setTimeout(() => setQuickStatus("idle"), 2000);
       checkDecided(t, nextDiff);
       await refresh();
+      await recomputeNextLocked();
     } catch {
       setQuickStatus("error");
     } finally {
