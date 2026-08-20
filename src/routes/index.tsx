@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Instagram } from "lucide-react";
 
 import crest from "@/assets/crest.png";
+import { supabase } from "@/integrations/supabase/client";
 import { useCoursePhotos } from "@/lib/course-photos";
 import { cn } from "@/lib/utils";
 import { DIVISION_LIST_TEXT, DIVISION_TABS } from "@/lib/divisions";
