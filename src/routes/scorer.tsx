@@ -194,8 +194,28 @@ function PlayerChip({ name }: { name: string | null }) {
   );
 }
 
+function useScorerMatchesRealtime() {
+  const queryClient = useQueryClient();
+  useEffect(() => {
+    const channel = supabase
+      .channel("scorer-matches")
+      .on("postgres_changes", { event: "*", schema: "public", table: "matches" }, () => {
+        queryClient.invalidateQueries({ queryKey: ["scorer-matches"] });
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "hole_results" }, () => {
+        queryClient.invalidateQueries({ queryKey: ["scorer-matches"] });
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
+}
+
 function MatchList() {
   const navigate = useNavigate();
+  useScorerMatchesRealtime();
   const { data, isLoading, error } = useQuery({
     queryKey: ["scorer-matches"],
     queryFn: fetchMatches,
