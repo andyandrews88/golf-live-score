@@ -302,6 +302,7 @@ function Scoring({ matchId, passcode }: { matchId: string; passcode: string }) {
     try {
       await start({ data: { passcode, matchId } });
       await refresh();
+      await recomputeNextLocked();
     } finally {
       setBusy(false);
     }
