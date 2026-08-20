@@ -54,25 +54,25 @@ function WeatherPanel() {
   if (!data) return null;
 
   return (
-    <section className="mx-auto mt-6 w-full max-w-3xl rounded-xl border border-border bg-card p-4 shadow-sm">
+    <section className="mx-auto mt-6 w-full max-w-3xl rounded-xl border border-border bg-card p-6 shadow-sm">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          <p className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
             Weather &amp; Conditions
           </p>
-          <p className="font-headline text-2xl font-bold text-primary">{data.label}</p>
+          <p className="font-headline text-3xl font-bold text-primary">{data.label}</p>
         </div>
         <div className="text-right">
-          <p className="font-headline text-2xl font-bold text-foreground">
+          <p className="font-headline text-3xl font-bold text-foreground">
             {data.high}° / {data.low}°
           </p>
-          <div className="mt-1 flex flex-wrap items-center justify-end gap-x-3 text-xs text-muted-foreground">
+          <div className="mt-1 flex flex-wrap items-center justify-end gap-x-3 text-sm text-muted-foreground">
             {data.rain !== null && <span>{data.rain}% rain</span>}
             {data.wind !== null && <span>{Math.round(data.wind)} km/h wind</span>}
             {data.humidity !== null && <span>{Math.round(data.humidity)}% humidity</span>}
           </div>
           {stimp && (
-            <p className="mt-1 text-xs text-muted-foreground">Stimp: {stimp}</p>
+            <p className="mt-1 text-sm text-muted-foreground">Stimp: {stimp}</p>
           )}
         </div>
       </div>
