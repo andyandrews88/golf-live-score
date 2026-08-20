@@ -13,6 +13,7 @@ import {
 } from "@/components/player-profile";
 import crest from "@/assets/crest.png";
 import { useCoursePhotos } from "@/lib/course-photos";
+import { useRefetchOnVisible } from "@/lib/use-refetch-on-visible";
 
 export const Route = createFileRoute("/tv")({
   head: () => ({
@@ -287,6 +288,7 @@ function TvPage() {
 function TvBoard() {
   const queryClient = useQueryClient();
   const { data, dataUpdatedAt } = useQuery({ queryKey: ["tv-board"], queryFn: fetchData });
+  useRefetchOnVisible(["tv-board"]);
   useTick(1000);
 
   useEffect(() => {
