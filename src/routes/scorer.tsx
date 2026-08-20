@@ -21,6 +21,7 @@ import {
 import { useCoursePhotos } from "@/lib/course-photos";
 import { getScorerPasscode, setScorerPasscode } from "@/lib/scorer-session";
 import {
+import { useRefetchOnVisible } from "@/lib/use-refetch-on-visible";
   PlayerAvatar,
   PlayerProfileProvider,
   usePlayerProfile,
@@ -216,6 +217,7 @@ function useScorerMatchesRealtime() {
 function MatchList() {
   const navigate = useNavigate();
   useScorerMatchesRealtime();
+  useRefetchOnVisible(["scorer-matches"]);
   const { data, isLoading, error } = useQuery({
     queryKey: ["scorer-matches"],
     queryFn: fetchMatches,

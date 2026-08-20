@@ -10,6 +10,7 @@ import crest from "@/assets/crest.png";
 import { ALL_DIVISION_TABS, DIVISION_LIST_TEXT, DIVISION_ROUNDS } from "@/lib/divisions";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
+import { useRefetchOnVisible } from "@/lib/use-refetch-on-visible";
   PlayerAvatar,
   PlayerProfileProvider,
   usePlayerProfile,
@@ -96,6 +97,7 @@ async function fetchData() {
 function useLiveData() {
   const queryClient = useQueryClient();
   const query = useQuery({ queryKey: ["live-board"], queryFn: fetchData });
+  useRefetchOnVisible(["live-board"]);
 
   useEffect(() => {
     const channel = supabase
