@@ -175,6 +175,7 @@ function Scoring({ matchId, passcode }: { matchId: string; passcode: string }) {
   const [quickMargin, setQuickMargin] = useState("");
   const [quickStatus, setQuickStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [nextLocked, setNextLocked] = useState(false);
 
   const match = data?.match ?? null;
   const holes = data?.holes ?? [];
@@ -186,6 +187,31 @@ function Scoring({ matchId, passcode }: { matchId: string; passcode: string }) {
   async function refresh() {
     await queryClient.invalidateQueries({ queryKey });
   }
+
+  const recomputeNextLocked = useCallback(async () => {
+    try {
+      const locked = await fetchNextLocked(match);
+      setNextLocked(locked);
+    } catch {
+      // If we can't reach the DB, assume locked so the dangerous action is hidden.
+      setNextLocked(true);
+    }
+  }, [match]);
+
+  useEffect(() => {
+    recomputeNextLocked();
+  }, [recomputeNextLocked]);
+
+  useEffect(() => {
+    function onVisible() {
+      if (document.visibilityState === "visible") {
+        refresh();
+        recomputeNextLocked();
+      }
+    }
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [matchId, recomputeNextLocked]);
 
   const p1Wins = holes.filter((h) => h.result === "p1").length;
   const p2Wins = holes.filter((h) => h.result === "p2").length;
