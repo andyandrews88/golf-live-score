@@ -10,6 +10,7 @@ import {
   PlayerAvatar,
   PlayerProfileProvider,
   usePlayerProfile,
+  initialsOf,
 } from "@/components/player-profile";
 import crest from "@/assets/crest.png";
 import { useCoursePhotos } from "@/lib/course-photos";
