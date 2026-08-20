@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -89,29 +89,30 @@ async function fetchMatch(matchId: string) {
   if (matchRes.error) throw matchRes.error;
   if (holesRes.error) throw holesRes.error;
 
-  const match = matchRes.data as Match | null;
-  let nextLocked = false;
-  if (match?.status === "completed" && match.feeds_into_match_id) {
-    const [nextRes, nextHolesRes] = await Promise.all([
-      supabase
-        .from("matches")
-        .select("id, status")
-        .eq("id", match.feeds_into_match_id)
-        .maybeSingle(),
-      supabase
-        .from("hole_results")
-        .select("id", { count: "exact", head: true })
-        .eq("match_id", match.feeds_into_match_id),
-    ]);
-    const nextStatus = nextRes.data?.status ?? null;
-    nextLocked = nextStatus !== "upcoming" || (nextHolesRes.count ?? 0) > 0;
-  }
-
   return {
-    match,
+    match: matchRes.data as Match | null,
     holes: (holesRes.data ?? []) as Hole[],
-    nextLocked,
   };
+}
+
+async function fetchNextLocked(match: Match | null) {
+  if (!match || match.status !== "completed" || !match.feeds_into_match_id) {
+    return false;
+  }
+  const [nextRes, nextHolesRes] = await Promise.all([
+    supabase
+      .from("matches")
+      .select("id, status")
+      .eq("id", match.feeds_into_match_id)
+      .maybeSingle(),
+    supabase
+      .from("hole_results")
+      .select("id", { count: "exact", head: true })
+      .eq("match_id", match.feeds_into_match_id),
+  ]);
+  if (nextRes.error) throw nextRes.error;
+  const nextStatus = nextRes.data?.status ?? null;
+  return nextStatus !== "upcoming" || (nextHolesRes.count ?? 0) > 0;
 }
 
 
@@ -174,6 +175,7 @@ function Scoring({ matchId, passcode }: { matchId: string; passcode: string }) {
   const [quickMargin, setQuickMargin] = useState("");
   const [quickStatus, setQuickStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [nextLocked, setNextLocked] = useState(false);
 
   const match = data?.match ?? null;
   const holes = data?.holes ?? [];
@@ -185,6 +187,31 @@ function Scoring({ matchId, passcode }: { matchId: string; passcode: string }) {
   async function refresh() {
     await queryClient.invalidateQueries({ queryKey });
   }
+
+  const recomputeNextLocked = useCallback(async () => {
+    try {
+      const locked = await fetchNextLocked(match);
+      setNextLocked(locked);
+    } catch {
+      // If we can't reach the DB, assume locked so the dangerous action is hidden.
+      setNextLocked(true);
+    }
+  }, [match]);
+
+  useEffect(() => {
+    recomputeNextLocked();
+  }, [recomputeNextLocked]);
+
+  useEffect(() => {
+    function onVisible() {
+      if (document.visibilityState === "visible") {
+        refresh();
+        recomputeNextLocked();
+      }
+    }
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [matchId, recomputeNextLocked]);
 
   const p1Wins = holes.filter((h) => h.result === "p1").length;
   const p2Wins = holes.filter((h) => h.result === "p2").length;
@@ -211,6 +238,7 @@ function Scoring({ matchId, passcode }: { matchId: string; passcode: string }) {
       const nextDiff = nextP1 - nextP2;
       checkDecided(nextThru, nextDiff);
       await refresh();
+      await recomputeNextLocked();
     } finally {
       setBusy(false);
     }
@@ -248,6 +276,7 @@ function Scoring({ matchId, passcode }: { matchId: string; passcode: string }) {
       window.setTimeout(() => setQuickStatus("idle"), 2000);
       checkDecided(t, nextDiff);
       await refresh();
+      await recomputeNextLocked();
     } catch {
       setQuickStatus("error");
     } finally {
@@ -262,6 +291,7 @@ function Scoring({ matchId, passcode }: { matchId: string; passcode: string }) {
       await undo({ data: { passcode, matchId } });
       setDecided(null);
       await refresh();
+      await recomputeNextLocked();
     } finally {
       setBusy(false);
     }
@@ -272,6 +302,7 @@ function Scoring({ matchId, passcode }: { matchId: string; passcode: string }) {
     try {
       await start({ data: { passcode, matchId } });
       await refresh();
+      await recomputeNextLocked();
     } finally {
       setBusy(false);
     }
@@ -284,6 +315,7 @@ function Scoring({ matchId, passcode }: { matchId: string; passcode: string }) {
       await resetToUpcoming({ data: { passcode, matchId } });
       setResetOpen(false);
       await refresh();
+      await recomputeNextLocked();
     } finally {
       setBusy(false);
     }
@@ -297,6 +329,7 @@ function Scoring({ matchId, passcode }: { matchId: string; passcode: string }) {
       setUndoCompleteOpen(false);
       setDecided(null);
       await refresh();
+      await recomputeNextLocked();
     } finally {
       setBusy(false);
     }
@@ -309,6 +342,7 @@ function Scoring({ matchId, passcode }: { matchId: string; passcode: string }) {
       setDecided(null);
       setManualOpen(false);
       await refresh();
+      await recomputeNextLocked();
     } finally {
       setBusy(false);
     }
@@ -332,7 +366,6 @@ function Scoring({ matchId, passcode }: { matchId: string; passcode: string }) {
   const p1 = match.p1_name ?? "Player 1";
   const p2 = match.p2_name ?? "Player 2";
   const completed = match.status === "completed";
-  const nextLocked = data?.nextLocked ?? false;
 
   return (
     <main className="min-h-screen bg-background px-safe pb-20">
@@ -719,6 +752,7 @@ function Scoring({ matchId, passcode }: { matchId: string; passcode: string }) {
             try {
               await saveComment({ data: { passcode, matchId, comment: comment ?? "" } });
               await refresh();
+              await recomputeNextLocked();
               setSaveStatus("saved");
               window.setTimeout(() => setSaveStatus("idle"), 2000);
             } catch {
