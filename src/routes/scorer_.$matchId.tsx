@@ -315,6 +315,7 @@ function Scoring({ matchId, passcode }: { matchId: string; passcode: string }) {
       await resetToUpcoming({ data: { passcode, matchId } });
       setResetOpen(false);
       await refresh();
+      await recomputeNextLocked();
     } finally {
       setBusy(false);
     }
