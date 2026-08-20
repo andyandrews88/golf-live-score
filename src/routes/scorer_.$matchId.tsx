@@ -752,6 +752,7 @@ function Scoring({ matchId, passcode }: { matchId: string; passcode: string }) {
             try {
               await saveComment({ data: { passcode, matchId, comment: comment ?? "" } });
               await refresh();
+              await recomputeNextLocked();
               setSaveStatus("saved");
               window.setTimeout(() => setSaveStatus("idle"), 2000);
             } catch {
