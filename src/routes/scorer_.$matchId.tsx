@@ -359,7 +359,6 @@ function Scoring({ matchId, passcode }: { matchId: string; passcode: string }) {
   const p1 = match.p1_name ?? "Player 1";
   const p2 = match.p2_name ?? "Player 2";
   const completed = match.status === "completed";
-  const nextLocked = data?.nextLocked ?? false;
 
   return (
     <main className="min-h-screen bg-background px-safe pb-20">
