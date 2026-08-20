@@ -342,6 +342,7 @@ function Scoring({ matchId, passcode }: { matchId: string; passcode: string }) {
       setDecided(null);
       setManualOpen(false);
       await refresh();
+      await recomputeNextLocked();
     } finally {
       setBusy(false);
     }
