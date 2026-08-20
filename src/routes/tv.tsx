@@ -55,6 +55,9 @@ type Match = {
   quick_thru: number | null;
   quick_diff: number | null;
   quick_updated_at: string | null;
+  winner: string | null;
+  result_text: string | null;
+  updated_at: string | null;
 };
 
 type HoleResult = {
