@@ -291,6 +291,7 @@ function Scoring({ matchId, passcode }: { matchId: string; passcode: string }) {
       await undo({ data: { passcode, matchId } });
       setDecided(null);
       await refresh();
+      await recomputeNextLocked();
     } finally {
       setBusy(false);
     }
