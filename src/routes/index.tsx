@@ -85,12 +85,30 @@ async function fetchWeather(): Promise<Forecast> {
   };
 }
 
+async function fetchStimp(): Promise<string | null> {
+  const { data, error } = await supabase
+    .from("course_info")
+    .select("value")
+    .eq("key", "stimp_reading")
+    .maybeSingle();
+  if (error) return null;
+  const value = (data?.value ?? "").trim();
+  return value.length > 0 ? value : null;
+}
+
 function WeatherPanel() {
   const { data } = useQuery({
     queryKey: ["colombo-weather"],
     queryFn: fetchWeather,
     retry: false,
     staleTime: 1000 * 60 * 30,
+  });
+
+  const { data: stimp } = useQuery({
+    queryKey: ["course-stimp"],
+    queryFn: fetchStimp,
+    retry: false,
+    staleTime: 1000 * 60 * 5,
   });
 
   if (!data) return null;
@@ -100,7 +118,7 @@ function WeatherPanel() {
       <div className="flex items-center justify-between gap-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Colombo today
+            Weather &amp; Conditions
           </p>
           <p className="font-headline text-2xl font-bold text-primary">{data.label}</p>
         </div>
@@ -113,11 +131,15 @@ function WeatherPanel() {
             {data.wind !== null && <span>{Math.round(data.wind)} km/h wind</span>}
             {data.humidity !== null && <span>{Math.round(data.humidity)}% humidity</span>}
           </div>
+          {stimp && (
+            <p className="mt-1 text-xs text-muted-foreground">Stimp: {stimp}</p>
+          )}
         </div>
       </div>
     </section>
   );
 }
+
 
 function Carousel() {
   const { data } = useCoursePhotos();
