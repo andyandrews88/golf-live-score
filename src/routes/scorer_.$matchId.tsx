@@ -238,6 +238,7 @@ function Scoring({ matchId, passcode }: { matchId: string; passcode: string }) {
       const nextDiff = nextP1 - nextP2;
       checkDecided(nextThru, nextDiff);
       await refresh();
+      await recomputeNextLocked();
     } finally {
       setBusy(false);
     }
