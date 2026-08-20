@@ -10,6 +10,7 @@ import {
   PlayerAvatar,
   PlayerProfileProvider,
   usePlayerProfile,
+  initialsOf,
 } from "@/components/player-profile";
 import crest from "@/assets/crest.png";
 import { useCoursePhotos } from "@/lib/course-photos";
@@ -55,6 +56,9 @@ type Match = {
   quick_thru: number | null;
   quick_diff: number | null;
   quick_updated_at: string | null;
+  winner: string | null;
+  result_text: string | null;
+  updated_at: string | null;
 };
 
 type HoleResult = {
@@ -189,6 +193,54 @@ function TvCard({ match, holes }: { match: Match; holes: HoleResult[] }) {
     </article>
   );
 }
+
+function colomboToday() {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Colombo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+}
+
+function WinnerSpotlight({ match }: { match: Match }) {
+  const profile = usePlayerProfile();
+  const winnerName = (match.winner === "p1" ? match.p1_name : match.p2_name) ?? "TBD";
+  const loserName = (match.winner === "p1" ? match.p2_name : match.p1_name) ?? "TBD";
+  const photo = profile?.photos.get(winnerName);
+
+  return (
+    <section className="flex flex-1 flex-col items-center justify-center text-center">
+      <div className="size-56 overflow-hidden rounded-full border-4 border-secondary bg-primary/85 shadow-2xl xl:size-72">
+        {photo ? (
+          <img
+            src={photo}
+            alt={winnerName}
+            width={300}
+            height={300}
+            className="size-full object-cover"
+          />
+        ) : (
+          <span className="flex size-full items-center justify-center font-headline text-6xl font-bold text-primary-foreground xl:text-7xl">
+            {initialsOf(winnerName)}
+          </span>
+        )}
+      </div>
+
+      <p className="mt-8 font-headline text-6xl font-bold text-primary-foreground xl:text-7xl">
+        {winnerName}
+      </p>
+      <p className="mt-3 font-headline text-5xl font-bold uppercase tracking-wide text-secondary xl:text-6xl">
+        Won {match.result_text ?? ""}
+      </p>
+      <p className="mt-3 text-2xl text-primary-foreground/85 xl:text-3xl">def. {loserName}</p>
+      <p className="mt-2 font-headline text-xl uppercase tracking-[0.3em] text-secondary/90">
+        {match.round} · {DIVISION_LABELS[match.division] ?? match.division}
+      </p>
+    </section>
+  );
+}
+
 
 function WeatherLine({ className }: { className?: string }) {
   const { data: weather } = useQuery({
@@ -380,11 +432,27 @@ function TvBoard() {
     return out;
   }, [live]);
 
+  // Winner spotlights: matches completed today (Colombo), most recent first.
+  const spotlights = useMemo(() => {
+    const today = colomboToday();
+    return (data?.matches ?? [])
+      .filter(
+        (m) =>
+          m.status === "completed" &&
+          m.winner != null &&
+          String(m.match_date).slice(0, 10) === today,
+      )
+      .sort((a, b) => (b.updated_at ?? "").localeCompare(a.updated_at ?? ""));
+  }, [data]);
+
   const [stepIndex, setStepIndex] = useState(0);
   const [photoIndex, setPhotoIndex] = useState(0);
   const hasLive = live.length > 0;
-  // Steps = each page of matches, plus one trailing "breather" step (clear photo).
-  const stepCount = hasLive ? pages.length + 1 : 1;
+  const liveCount = hasLive ? pages.length : 0;
+  const spotCount = spotlights.length;
+  const hasContent = hasLive || spotCount > 0;
+  // Steps = live match pages, then one page per winner spotlight, then the breather.
+  const stepCount = hasContent ? liveCount + spotCount + 1 : 1;
   useEffect(() => {
     if (stepCount <= 1) {
       setStepIndex(0);
@@ -396,8 +464,13 @@ function TvBoard() {
   }, [stepCount]);
 
   const safeStep = Math.min(stepIndex, stepCount - 1);
-  const isBreather = hasLive && safeStep === pages.length;
-  const pageIndex = isBreather ? 0 : safeStep;
+  const isBreather = hasContent && safeStep === liveCount + spotCount;
+  const showLivePage = hasLive && safeStep < liveCount;
+  const spotlight =
+    hasContent && safeStep >= liveCount && safeStep < liveCount + spotCount
+      ? spotlights[safeStep - liveCount]
+      : undefined;
+  const pageIndex = showLivePage ? safeStep : 0;
   const page = pages[Math.min(pageIndex, pages.length - 1)];
   const secondsAgo = dataUpdatedAt ? Math.max(0, Math.round((Date.now() - dataUpdatedAt) / 1000)) : null;
 
@@ -405,9 +478,10 @@ function TvBoard() {
     <main className="relative min-h-screen overflow-hidden text-primary-foreground">
       <PhotoBackdrop
         onIndexChange={setPhotoIndex}
-        scrim={hasLive ? (isBreather ? "none" : "light") : "heavy"}
+        scrim={hasContent ? (isBreather ? "none" : "light") : "heavy"}
       />
-      {!hasLive && <IdleScreen next={nextUp} photoIndex={photoIndex} />}
+      {!hasContent && <IdleScreen next={nextUp} photoIndex={photoIndex} />}
+
 
       <div className="relative flex min-h-screen flex-col">
         <header
@@ -441,7 +515,7 @@ function TvBoard() {
               isBreather && "pointer-events-none opacity-0",
             )}
           >
-            {live.length > 0 && page && (
+            {showLivePage && page && (
               <section className="mt-6 flex flex-1 flex-col">
                 {page.heading && (
                   <h2 className="mb-4 font-headline text-2xl font-bold uppercase tracking-widest text-secondary">
@@ -475,7 +549,10 @@ function TvBoard() {
                 )}
               </section>
             )}
+
+            {spotlight && <WinnerSpotlight key={spotlight.id} match={spotlight} />}
           </div>
+
 
           <div
             className={cn(
