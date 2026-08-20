@@ -89,29 +89,30 @@ async function fetchMatch(matchId: string) {
   if (matchRes.error) throw matchRes.error;
   if (holesRes.error) throw holesRes.error;
 
-  const match = matchRes.data as Match | null;
-  let nextLocked = false;
-  if (match?.status === "completed" && match.feeds_into_match_id) {
-    const [nextRes, nextHolesRes] = await Promise.all([
-      supabase
-        .from("matches")
-        .select("id, status")
-        .eq("id", match.feeds_into_match_id)
-        .maybeSingle(),
-      supabase
-        .from("hole_results")
-        .select("id", { count: "exact", head: true })
-        .eq("match_id", match.feeds_into_match_id),
-    ]);
-    const nextStatus = nextRes.data?.status ?? null;
-    nextLocked = nextStatus !== "upcoming" || (nextHolesRes.count ?? 0) > 0;
-  }
-
   return {
-    match,
+    match: matchRes.data as Match | null,
     holes: (holesRes.data ?? []) as Hole[],
-    nextLocked,
   };
+}
+
+async function fetchNextLocked(match: Match | null) {
+  if (!match || match.status !== "completed" || !match.feeds_into_match_id) {
+    return false;
+  }
+  const [nextRes, nextHolesRes] = await Promise.all([
+    supabase
+      .from("matches")
+      .select("id, status")
+      .eq("id", match.feeds_into_match_id)
+      .maybeSingle(),
+    supabase
+      .from("hole_results")
+      .select("id", { count: "exact", head: true })
+      .eq("match_id", match.feeds_into_match_id),
+  ]);
+  if (nextRes.error) throw nextRes.error;
+  const nextStatus = nextRes.data?.status ?? null;
+  return nextStatus !== "upcoming" || (nextHolesRes.count ?? 0) > 0;
 }
 
 
