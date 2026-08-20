@@ -20,12 +20,11 @@ import {
 } from "@/lib/course-photos.functions";
 import { useCoursePhotos } from "@/lib/course-photos";
 import { getScorerPasscode, setScorerPasscode } from "@/lib/scorer-session";
-import {
-import { useRefetchOnVisible } from "@/lib/use-refetch-on-visible";
-  PlayerAvatar,
+import {  PlayerAvatar,
   PlayerProfileProvider,
   usePlayerProfile,
 } from "@/components/player-profile";
+import { useRefetchOnVisible } from "@/lib/use-refetch-on-visible";
 
 export const Route = createFileRoute("/scorer")({
   head: () => ({

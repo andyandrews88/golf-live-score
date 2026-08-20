@@ -9,12 +9,11 @@ import { computeMatchScore } from "@/lib/match-score";
 import crest from "@/assets/crest.png";
 import { ALL_DIVISION_TABS, DIVISION_LIST_TEXT, DIVISION_ROUNDS } from "@/lib/divisions";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-import { useRefetchOnVisible } from "@/lib/use-refetch-on-visible";
-  PlayerAvatar,
+import {  PlayerAvatar,
   PlayerProfileProvider,
   usePlayerProfile,
 } from "@/components/player-profile";
+import { useRefetchOnVisible } from "@/lib/use-refetch-on-visible";
 
 export const Route = createFileRoute("/live")({
   head: () => ({
