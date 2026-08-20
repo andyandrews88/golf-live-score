@@ -434,46 +434,57 @@ function TvBoard() {
           </div>
         </header>
 
-        <div
-          className={cn(
-            "flex flex-1 flex-col px-safe pb-6 transition-opacity duration-500",
-            isBreather && "pointer-events-none opacity-0",
-          )}
-        >
-          {live.length > 0 && page && (
-            <section className="mt-6 flex flex-1 flex-col">
-              {page.heading && (
-                <h2 className="mb-4 font-headline text-2xl font-bold uppercase tracking-widest text-secondary">
-                  {page.heading}
-                </h2>
-              )}
-              <div
-                className={cn(
-                  "grid flex-1 gap-5",
-                  page.matches.length > 1 ? "grid-cols-2" : "grid-cols-1",
+        <div className="relative flex flex-1 flex-col">
+          <div
+            className={cn(
+              "flex flex-1 flex-col px-safe pb-6 transition-opacity duration-500",
+              isBreather && "pointer-events-none opacity-0",
+            )}
+          >
+            {live.length > 0 && page && (
+              <section className="mt-6 flex flex-1 flex-col">
+                {page.heading && (
+                  <h2 className="mb-4 font-headline text-2xl font-bold uppercase tracking-widest text-secondary">
+                    {page.heading}
+                  </h2>
                 )}
-              >
-                {page.matches.map((m) => (
-                  <TvCard key={m.id} match={m} holes={holesByMatch.get(m.id) ?? []} />
-                ))}
-              </div>
-
-              {pages.length > 1 && (
-                <div className="mt-5 flex justify-center gap-2">
-                  {pages.map((p, i) => (
-                    <span
-                      key={p.heading ?? i}
-                      className={cn(
-                        "size-3 rounded-full",
-                        i === pageIndex ? "bg-secondary" : "bg-primary-foreground/30",
-                      )}
-                      aria-hidden
-                    />
+                <div
+                  className={cn(
+                    "grid flex-1 gap-5",
+                    page.matches.length > 1 ? "grid-cols-2" : "grid-cols-1",
+                  )}
+                >
+                  {page.matches.map((m) => (
+                    <TvCard key={m.id} match={m} holes={holesByMatch.get(m.id) ?? []} />
                   ))}
                 </div>
-              )}
-            </section>
-          )}
+
+                {pages.length > 1 && (
+                  <div className="mt-5 flex justify-center gap-2">
+                    {pages.map((p, i) => (
+                      <span
+                        key={p.heading ?? i}
+                        className={cn(
+                          "size-3 rounded-full",
+                          i === pageIndex ? "bg-secondary" : "bg-primary-foreground/30",
+                        )}
+                        aria-hidden
+                      />
+                    ))}
+                  </div>
+                )}
+              </section>
+            )}
+          </div>
+
+          <div
+            className={cn(
+              "absolute inset-0 flex items-center justify-center transition-opacity duration-500",
+              !isBreather && "pointer-events-none opacity-0",
+            )}
+          >
+            <WeatherLine className="text-2xl text-primary-foreground/85" />
+          </div>
         </div>
       </div>
     </main>
