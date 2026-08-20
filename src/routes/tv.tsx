@@ -14,6 +14,7 @@ import {
 import crest from "@/assets/crest.png";
 import { useCoursePhotos } from "@/lib/course-photos";
 import { useRefetchOnVisible } from "@/lib/use-refetch-on-visible";
+import { fetchStimp, fetchWeather } from "@/lib/weather";
 
 export const Route = createFileRoute("/tv")({
   head: () => ({
