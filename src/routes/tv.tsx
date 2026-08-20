@@ -515,7 +515,7 @@ function TvBoard() {
               isBreather && "pointer-events-none opacity-0",
             )}
           >
-            {live.length > 0 && page && (
+            {showLivePage && page && (
               <section className="mt-6 flex flex-1 flex-col">
                 {page.heading && (
                   <h2 className="mb-4 font-headline text-2xl font-bold uppercase tracking-widest text-secondary">
@@ -549,7 +549,10 @@ function TvBoard() {
                 )}
               </section>
             )}
+
+            {spotlight && <WinnerSpotlight key={spotlight.id} match={spotlight} />}
           </div>
+
 
           <div
             className={cn(
