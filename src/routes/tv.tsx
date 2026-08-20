@@ -190,7 +190,7 @@ function TvCard({ match, holes }: { match: Match; holes: HoleResult[] }) {
   );
 }
 
-function IdleWeather() {
+function WeatherLine({ className }: { className?: string }) {
   const { data: weather } = useQuery({
     queryKey: ["colombo-weather"],
     queryFn: fetchWeather,
@@ -215,8 +215,12 @@ function IdleWeather() {
   if (stimp) parts.push(`Stimp: ${stimp}`);
 
   return (
-    <p className="mt-4 text-2xl text-primary-foreground/85">{parts.join(" · ")}</p>
+    <p className={className}>{parts.join(" · ")}</p>
   );
+}
+
+function IdleWeather() {
+  return <WeatherLine className="mt-4 text-2xl text-primary-foreground/85" />;
 }
 
 function IdleScreen({
