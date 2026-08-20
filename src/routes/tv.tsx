@@ -432,11 +432,27 @@ function TvBoard() {
     return out;
   }, [live]);
 
+  // Winner spotlights: matches completed today (Colombo), most recent first.
+  const spotlights = useMemo(() => {
+    const today = colomboToday();
+    return (data?.matches ?? [])
+      .filter(
+        (m) =>
+          m.status === "completed" &&
+          m.winner != null &&
+          String(m.match_date).slice(0, 10) === today,
+      )
+      .sort((a, b) => (b.updated_at ?? "").localeCompare(a.updated_at ?? ""));
+  }, [data]);
+
   const [stepIndex, setStepIndex] = useState(0);
   const [photoIndex, setPhotoIndex] = useState(0);
   const hasLive = live.length > 0;
-  // Steps = each page of matches, plus one trailing "breather" step (clear photo).
-  const stepCount = hasLive ? pages.length + 1 : 1;
+  const liveCount = hasLive ? pages.length : 0;
+  const spotCount = spotlights.length;
+  const hasContent = hasLive || spotCount > 0;
+  // Steps = live match pages, then one page per winner spotlight, then the breather.
+  const stepCount = hasContent ? liveCount + spotCount + 1 : 1;
   useEffect(() => {
     if (stepCount <= 1) {
       setStepIndex(0);
@@ -448,8 +464,13 @@ function TvBoard() {
   }, [stepCount]);
 
   const safeStep = Math.min(stepIndex, stepCount - 1);
-  const isBreather = hasLive && safeStep === pages.length;
-  const pageIndex = isBreather ? 0 : safeStep;
+  const isBreather = hasContent && safeStep === liveCount + spotCount;
+  const showLivePage = hasLive && safeStep < liveCount;
+  const spotlight =
+    hasContent && safeStep >= liveCount && safeStep < liveCount + spotCount
+      ? spotlights[safeStep - liveCount]
+      : undefined;
+  const pageIndex = showLivePage ? safeStep : 0;
   const page = pages[Math.min(pageIndex, pages.length - 1)];
   const secondsAgo = dataUpdatedAt ? Math.max(0, Math.round((Date.now() - dataUpdatedAt) / 1000)) : null;
 
@@ -457,9 +478,10 @@ function TvBoard() {
     <main className="relative min-h-screen overflow-hidden text-primary-foreground">
       <PhotoBackdrop
         onIndexChange={setPhotoIndex}
-        scrim={hasLive ? (isBreather ? "none" : "light") : "heavy"}
+        scrim={hasContent ? (isBreather ? "none" : "light") : "heavy"}
       />
-      {!hasLive && <IdleScreen next={nextUp} photoIndex={photoIndex} />}
+      {!hasContent && <IdleScreen next={nextUp} photoIndex={photoIndex} />}
+
 
       <div className="relative flex min-h-screen flex-col">
         <header
