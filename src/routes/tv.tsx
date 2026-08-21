@@ -467,33 +467,56 @@ function TvBoard() {
       .sort((a, b) => (b.updated_at ?? "").localeCompare(a.updated_at ?? ""));
   }, [data]);
 
+  // Today's pending (not yet started) matches, in schedule order.
+  const pending = useMemo(() => {
+    const today = colomboToday();
+    return (data?.matches ?? []).filter(
+      (m) => m.status === "upcoming" && String(m.match_date).slice(0, 10) === today,
+    );
+  }, [data]);
+
+  type Step =
+    | { kind: "live"; ms: number; pageIndex: number }
+    | { kind: "spotlight"; ms: number; match: Match }
+    | { kind: "pending"; ms: number; match: Match }
+    | { kind: "breather"; ms: number };
+
+  const steps = useMemo<Step[]>(() => {
+    const out: Step[] = [];
+    if (live.length > 0) {
+      pages.forEach((_, i) => out.push({ kind: "live", ms: LIVE_MS, pageIndex: i }));
+    }
+    for (const m of spotlights) out.push({ kind: "spotlight", ms: CARD_MS, match: m });
+    for (const m of pending) out.push({ kind: "pending", ms: CARD_MS, match: m });
+    if (out.length > 0) out.push({ kind: "breather", ms: BREATHER_MS });
+    return out;
+  }, [live, pages, spotlights, pending]);
+
   const [stepIndex, setStepIndex] = useState(0);
   const [photoIndex, setPhotoIndex] = useState(0);
-  const hasLive = live.length > 0;
-  const liveCount = hasLive ? pages.length : 0;
-  const spotCount = spotlights.length;
-  const hasContent = hasLive || spotCount > 0;
-  // Steps = live match pages, then one page per winner spotlight, then the breather.
-  const stepCount = hasContent ? liveCount + spotCount + 1 : 1;
+  const hasContent = steps.length > 0;
+  const stepCount = steps.length;
+
   useEffect(() => {
-    if (stepCount <= 1) {
-      setStepIndex(0);
-      return;
-    }
     setStepIndex(0);
-    const id = setInterval(() => setStepIndex((i) => (i + 1) % stepCount), PAGE_MS);
-    return () => clearInterval(id);
   }, [stepCount]);
 
-  const safeStep = Math.min(stepIndex, stepCount - 1);
-  const isBreather = hasContent && safeStep === liveCount + spotCount;
-  const showLivePage = hasLive && safeStep < liveCount;
-  const spotlight =
-    hasContent && safeStep >= liveCount && safeStep < liveCount + spotCount
-      ? spotlights[safeStep - liveCount]
-      : undefined;
-  const pageIndex = showLivePage ? safeStep : 0;
-  const page = pages[Math.min(pageIndex, pages.length - 1)];
+  const safeStep = hasContent ? Math.min(stepIndex, stepCount - 1) : 0;
+  const currentStep = steps[safeStep];
+  const currentMs = currentStep?.ms ?? LIVE_MS;
+
+  useEffect(() => {
+    if (stepCount <= 1) return;
+    const id = setTimeout(() => setStepIndex((i) => (i + 1) % stepCount), currentMs);
+    return () => clearTimeout(id);
+  }, [stepCount, safeStep, currentMs]);
+
+  const isBreather = currentStep?.kind === "breather";
+  const showLivePage = currentStep?.kind === "live";
+  const spotlight = currentStep?.kind === "spotlight" ? currentStep.match : undefined;
+  const pendingMatch = currentStep?.kind === "pending" ? currentStep.match : undefined;
+  const pageIndex = currentStep?.kind === "live" ? currentStep.pageIndex : 0;
+  const page = pages[Math.min(pageIndex, Math.max(pages.length - 1, 0))];
   const secondsAgo = dataUpdatedAt ? Math.max(0, Math.round((Date.now() - dataUpdatedAt) / 1000)) : null;
 
   return (
