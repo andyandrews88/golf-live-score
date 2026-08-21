@@ -244,6 +244,26 @@ function WinnerSpotlight({ match }: { match: Match }) {
 }
 
 
+function PendingSpotlight({ match }: { match: Match }) {
+  return (
+    <section className="flex flex-1 flex-col items-center justify-center text-center">
+      <p className="font-headline text-xl uppercase tracking-[0.4em] text-secondary">Coming Up</p>
+      <div className="mt-8 rounded-2xl border border-primary-foreground/20 bg-primary/85 px-12 py-10 shadow-2xl backdrop-blur-[2px]">
+        <p className="font-headline text-5xl font-bold text-primary-foreground xl:text-6xl">
+          {match.p1_name ?? "TBD"} <span className="text-secondary">vs</span>{" "}
+          {match.p2_name ?? "TBD"}
+        </p>
+        <p className="mt-5 font-headline text-2xl uppercase tracking-widest text-secondary">
+          {match.round} · {DIVISION_LABELS[match.division] ?? match.division}
+        </p>
+        <p className="mt-2 text-xl text-primary-foreground/80">
+          {match.date_label} · {match.tee_time}
+        </p>
+      </div>
+    </section>
+  );
+}
+
 function WeatherLine({ className }: { className?: string }) {
   const { data: weather } = useQuery({
     queryKey: ["colombo-weather"],
