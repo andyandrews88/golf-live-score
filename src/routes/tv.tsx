@@ -70,7 +70,9 @@ type HoleResult = {
 
 
 const PAGE_SIZE = 4;
-const PAGE_MS = 15000;
+const LIVE_MS = 15000;
+const CARD_MS = 6000;
+const BREATHER_MS = 15000;
 const PHOTO_MS = 20000;
 
 async function fetchData() {
