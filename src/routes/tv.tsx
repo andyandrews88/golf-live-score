@@ -596,6 +596,7 @@ function TvBoard() {
             )}
 
             {spotlight && <WinnerSpotlight key={spotlight.id} match={spotlight} />}
+            {pendingMatch && <PendingSpotlight key={pendingMatch.id} match={pendingMatch} />}
           </div>
 
 
