@@ -72,6 +72,7 @@ type HoleResult = {
 const PAGE_SIZE = 4;
 const LIVE_MS = 15000;
 const CARD_MS = 6000;
+const FINALS_MS = 10000;
 const BREATHER_MS = 15000;
 const PHOTO_MS = 20000;
 
@@ -260,6 +261,68 @@ function PendingSpotlight({ match }: { match: Match }) {
           {match.date_label} · {match.tee_time}
         </p>
       </div>
+    </section>
+  );
+}
+
+function FinalsPlayerCircle({
+  name,
+  photo,
+}: {
+  name: string | null;
+  photo: string | undefined;
+}) {
+  return (
+    <div className="flex flex-col items-center">
+      <div className="size-44 overflow-hidden rounded-full border-4 border-secondary bg-primary/85 shadow-2xl xl:size-60">
+        {photo ? (
+          <img
+            src={photo}
+            alt={name ?? "Player"}
+            width={300}
+            height={300}
+            className="size-full object-cover"
+          />
+        ) : (
+          <span className="flex size-full items-center justify-center font-headline text-5xl font-bold text-primary-foreground xl:text-6xl">
+            {initialsOf(name ?? "TBD")}
+          </span>
+        )}
+      </div>
+      <p className="mt-4 max-w-60 truncate font-headline text-3xl font-bold text-primary-foreground xl:text-4xl">
+        {name ?? "TBD"}
+      </p>
+    </div>
+  );
+}
+
+function FinalCard({ match }: { match: Match }) {
+  const profile = usePlayerProfile();
+  const p1Photo = match.p1_name ? profile?.photos.get(match.p1_name) : undefined;
+  const p2Photo = match.p2_name ? profile?.photos.get(match.p2_name) : undefined;
+  return (
+    <div className="flex max-w-2xl flex-1 flex-col items-center text-center">
+      <p className="font-headline text-xl uppercase tracking-[0.3em] text-secondary xl:text-2xl">
+        {DIVISION_LABELS[match.division] ?? match.division} · {match.round}
+      </p>
+      <div className="mt-8 flex items-center justify-center gap-6 xl:gap-8">
+        <FinalsPlayerCircle name={match.p1_name} photo={p1Photo} />
+        <span className="font-headline text-5xl font-bold text-secondary xl:text-6xl">VS</span>
+        <FinalsPlayerCircle name={match.p2_name} photo={p2Photo} />
+      </div>
+      <p className="mt-6 text-xl text-primary-foreground/80">
+        {match.date_label} · {match.tee_time}
+      </p>
+    </div>
+  );
+}
+
+function FinalsSpotlight({ matches }: { matches: Match[] }) {
+  return (
+    <section className="flex flex-1 flex-wrap items-center justify-center gap-10 px-safe xl:gap-16">
+      {matches.map((m) => (
+        <FinalCard key={m.id} match={m} />
+      ))}
     </section>
   );
 }
@@ -479,6 +542,7 @@ function TvBoard() {
     | { kind: "live"; ms: number; pageIndex: number }
     | { kind: "spotlight"; ms: number; match: Match }
     | { kind: "pending"; ms: number; match: Match }
+    | { kind: "finals"; ms: number; matches: Match[] }
     | { kind: "breather"; ms: number };
 
   const steps = useMemo<Step[]>(() => {
@@ -487,7 +551,23 @@ function TvBoard() {
       pages.forEach((_, i) => out.push({ kind: "live", ms: LIVE_MS, pageIndex: i }));
     }
     for (const m of spotlights) out.push({ kind: "spotlight", ms: CARD_MS, match: m });
-    for (const m of pending) out.push({ kind: "pending", ms: CARD_MS, match: m });
+    // Final-round matches get the big spotlight treatment; consecutive finals share one page.
+    let finalsGroup: Match[] = [];
+    const flushFinals = () => {
+      if (finalsGroup.length > 0) {
+        out.push({ kind: "finals", ms: FINALS_MS, matches: finalsGroup });
+        finalsGroup = [];
+      }
+    };
+    for (const m of pending) {
+      if (m.round === "Final") {
+        finalsGroup.push(m);
+      } else {
+        flushFinals();
+        out.push({ kind: "pending", ms: CARD_MS, match: m });
+      }
+    }
+    flushFinals();
     if (out.length > 0) out.push({ kind: "breather", ms: BREATHER_MS });
     return out;
   }, [live, pages, spotlights, pending]);
@@ -515,6 +595,7 @@ function TvBoard() {
   const showLivePage = currentStep?.kind === "live";
   const spotlight = currentStep?.kind === "spotlight" ? currentStep.match : undefined;
   const pendingMatch = currentStep?.kind === "pending" ? currentStep.match : undefined;
+  const finalsMatches = currentStep?.kind === "finals" ? currentStep.matches : undefined;
   const pageIndex = currentStep?.kind === "live" ? currentStep.pageIndex : 0;
   const page = pages[Math.min(pageIndex, Math.max(pages.length - 1, 0))];
   const secondsAgo = dataUpdatedAt ? Math.max(0, Math.round((Date.now() - dataUpdatedAt) / 1000)) : null;
@@ -597,6 +678,12 @@ function TvBoard() {
 
             {spotlight && <WinnerSpotlight key={spotlight.id} match={spotlight} />}
             {pendingMatch && <PendingSpotlight key={pendingMatch.id} match={pendingMatch} />}
+            {finalsMatches && (
+              <FinalsSpotlight
+                key={finalsMatches.map((m) => m.id).join("-")}
+                matches={finalsMatches}
+              />
+            )}
           </div>
 
 
