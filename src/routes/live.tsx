@@ -382,6 +382,11 @@ function LiveBoard() {
           </Tabs>
         )}
 
+        <div className="mt-3 rounded-md border border-border bg-muted px-3 py-2 text-center">
+          <p className="text-xs text-muted-foreground">
+            Please keep a 20 metre distance from the players on the fairways and greens where possible.
+          </p>
+        </div>
 
         {isLoading && (
           <p className="py-10 text-center text-sm text-muted-foreground">Loading matches…</p>

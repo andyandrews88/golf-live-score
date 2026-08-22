@@ -606,7 +606,12 @@ function TvBoard() {
               !isBreather && "pointer-events-none opacity-0",
             )}
           >
-            <WeatherLine className="text-2xl text-primary-foreground/85" />
+            <div className="flex flex-col items-center text-center">
+              <WeatherLine className="text-2xl text-primary-foreground/85" />
+              <p className="mt-2 max-w-4xl px-6 text-2xl leading-snug text-primary-foreground/85">
+                Please keep a 20 metre distance from the players on the fairways and greens where possible.
+              </p>
+            </div>
           </div>
         </div>
       </div>
