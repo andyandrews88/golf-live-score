@@ -367,6 +367,7 @@ function Scoring({ matchId, passcode }: { matchId: string; passcode: string }) {
   const p1 = match.p1_name ?? "Player 1";
   const p2 = match.p2_name ?? "Player 2";
   const completed = match.status === "completed";
+  const totalHoles = match.total_holes ?? 18;
 
   return (
     <main className="min-h-screen bg-background px-safe pb-20">
