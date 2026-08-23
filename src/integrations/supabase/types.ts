@@ -127,6 +127,7 @@ export type Database = {
           sort_order: number
           status: string
           tee_time: string
+          total_holes: number
           updated_at: string
           winner: string | null
         }
@@ -153,6 +154,7 @@ export type Database = {
           sort_order: number
           status?: string
           tee_time: string
+          total_holes?: number
           updated_at?: string
           winner?: string | null
         }
@@ -179,6 +181,7 @@ export type Database = {
           sort_order?: number
           status?: string
           tee_time?: string
+          total_holes?: number
           updated_at?: string
           winner?: string | null
         }
