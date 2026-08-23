@@ -319,12 +319,3 @@ function Index() {
   );
 }
 
-function IndexWithProvider() {
-  return (
-    <PlayerProfileProvider>
-      <Index />
-    </PlayerProfileProvider>
-  );
-}
-
-export { IndexWithProvider as component };
