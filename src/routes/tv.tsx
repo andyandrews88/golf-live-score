@@ -546,7 +546,8 @@ function TvBoard() {
     return out;
   }, [live]);
 
-  // Winner spotlights: matches completed today (Colombo), most recent first.
+  // Winner spotlights: non-final matches completed today, plus any completed
+  // Final-round match regardless of date (champions are season-defining).
   const spotlights = useMemo(() => {
     const today = colomboToday();
     return (data?.matches ?? [])
@@ -554,7 +555,7 @@ function TvBoard() {
         (m) =>
           m.status === "completed" &&
           m.winner != null &&
-          String(m.match_date).slice(0, 10) === today,
+          (m.round === "Final" || String(m.match_date).slice(0, 10) === today),
       )
       .sort((a, b) => (b.updated_at ?? "").localeCompare(a.updated_at ?? ""));
   }, [data]);
