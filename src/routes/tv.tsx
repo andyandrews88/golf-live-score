@@ -213,14 +213,7 @@ function WinnerSpotlight({ match }: { match: Match }) {
   const photo = profile?.photos.get(winnerName);
   const isFinal = match.round === "Final";
 
-  const championHeadline =
-    match.division === "men"
-      ? "2026 MEN'S CLUB CHAMPION"
-      : match.division === "silver"
-        ? "2026 LADIES CLUB CHAMPION"
-        : match.division === "bronze"
-          ? "2026 LADIES BRONZE CHAMPION"
-          : "CHAMPION";
+  const championHeadline = championTitle(match.division).toUpperCase();
 
   return (
     <section className="flex flex-1 flex-col items-center justify-center text-center">
