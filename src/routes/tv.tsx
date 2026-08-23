@@ -211,6 +211,16 @@ function WinnerSpotlight({ match }: { match: Match }) {
   const winnerName = (match.winner === "p1" ? match.p1_name : match.p2_name) ?? "TBD";
   const loserName = (match.winner === "p1" ? match.p2_name : match.p1_name) ?? "TBD";
   const photo = profile?.photos.get(winnerName);
+  const isFinal = match.round === "Final";
+
+  const championHeadline =
+    match.division === "men"
+      ? "2026 MEN'S CLUB CHAMPION"
+      : match.division === "silver"
+        ? "2026 LADIES CLUB CHAMPION"
+        : match.division === "bronze"
+          ? "2026 LADIES BRONZE CHAMPION"
+          : "CHAMPION";
 
   return (
     <section className="flex flex-1 flex-col items-center justify-center text-center">
@@ -230,16 +240,35 @@ function WinnerSpotlight({ match }: { match: Match }) {
         )}
       </div>
 
-      <p className="mt-8 font-headline text-6xl font-bold text-primary-foreground xl:text-7xl">
-        {winnerName}
-      </p>
-      <p className="mt-3 font-headline text-5xl font-bold uppercase tracking-wide text-secondary xl:text-6xl">
-        Won {match.result_text ?? ""}
-      </p>
-      <p className="mt-3 text-2xl text-primary-foreground/85 xl:text-3xl">def. {loserName}</p>
-      <p className="mt-2 font-headline text-xl uppercase tracking-[0.3em] text-secondary/90">
-        {match.round} · {DIVISION_LABELS[match.division] ?? match.division}
-      </p>
+      {isFinal ? (
+        <>
+          <p className="mt-8 font-headline text-5xl font-bold uppercase tracking-wide text-secondary xl:text-6xl">
+            {championHeadline}
+          </p>
+          <p className="mt-4 font-headline text-6xl font-bold text-primary-foreground xl:text-7xl">
+            {winnerName}
+          </p>
+          <p className="mt-4 text-2xl text-primary-foreground/85 xl:text-3xl">
+            def. {loserName} {match.result_text ?? ""}
+          </p>
+          <p className="mt-3 font-headline text-xl uppercase tracking-[0.3em] text-secondary/90">
+            {DIVISION_LABELS[match.division] ?? match.division}
+          </p>
+        </>
+      ) : (
+        <>
+          <p className="mt-8 font-headline text-6xl font-bold text-primary-foreground xl:text-7xl">
+            {winnerName}
+          </p>
+          <p className="mt-3 font-headline text-5xl font-bold uppercase tracking-wide text-secondary xl:text-6xl">
+            Won {match.result_text ?? ""}
+          </p>
+          <p className="mt-3 text-2xl text-primary-foreground/85 xl:text-3xl">def. {loserName}</p>
+          <p className="mt-2 font-headline text-xl uppercase tracking-[0.3em] text-secondary/90">
+            {match.round} · {DIVISION_LABELS[match.division] ?? match.division}
+          </p>
+        </>
+      )}
     </section>
   );
 }
