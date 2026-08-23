@@ -67,6 +67,7 @@ type Match = {
   quick_thru: number | null;
   quick_diff: number | null;
   quick_updated_at: string | null;
+  total_holes: number;
 };
 
 type Hole = { id: number; hole_number: number; result: string; created_at: string };
@@ -76,7 +77,7 @@ async function fetchMatch(matchId: string) {
     supabase
       .from("matches")
       .select(
-        "id, division, round, date_label, tee_time, p1_name, p2_name, status, winner, result_text, comment, feeds_into_match_id, feeds_into_slot, quick_thru, quick_diff, quick_updated_at",
+        "id, division, round, date_label, tee_time, p1_name, p2_name, status, winner, result_text, comment, feeds_into_match_id, feeds_into_slot, quick_thru, quick_diff, quick_updated_at, total_holes",
       )
       .eq("id", matchId)
       .maybeSingle(),
@@ -246,7 +247,7 @@ function Scoring({ matchId, passcode }: { matchId: string; passcode: string }) {
 
   function checkDecided(nextThru: number, nextDiff: number) {
     const nextMargin = Math.abs(nextDiff);
-    const nextLeft = 18 - nextThru;
+    const nextLeft = (match?.total_holes ?? 18) - nextThru;
     if (nextMargin > nextLeft && nextMargin > 0) {
       setDecided({
         winner: nextDiff > 0 ? "p1" : "p2",
@@ -258,7 +259,7 @@ function Scoring({ matchId, passcode }: { matchId: string; passcode: string }) {
   async function onQuickSave() {
     if (busy) return;
     const t = Number(quickThru);
-    if (!Number.isInteger(t) || t < 0 || t > 18) {
+    if (!Number.isInteger(t) || t < 0 || t > (match?.total_holes ?? 18)) {
       setQuickStatus("error");
       return;
     }
