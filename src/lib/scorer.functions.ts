@@ -40,7 +40,7 @@ export const saveQuickScore = createServerFn({ method: "POST" })
   .inputValidator((data: { passcode: string; matchId: string; thru: number; diff: number }) => {
     const thru = Math.trunc(Number(data?.thru));
     const diff = Math.trunc(Number(data?.diff));
-    if (!Number.isFinite(thru) || thru < 0 || thru > 18) throw new Error("Invalid holes played");
+    if (!Number.isFinite(thru) || thru < 0 || thru > 72) throw new Error("Invalid holes played");
     if (!Number.isFinite(diff) || Math.abs(diff) > thru) throw new Error("Invalid margin");
     return {
       passcode: String(data?.passcode ?? ""),
@@ -51,6 +51,15 @@ export const saveQuickScore = createServerFn({ method: "POST" })
   })
   .handler(async ({ data }) => {
     const db = await requireScorer(data.passcode);
+    const { data: match, error: matchErr } = await db
+      .from("matches")
+      .select("total_holes")
+      .eq("id", data.matchId)
+      .maybeSingle();
+    if (matchErr) throw matchErr;
+    const totalHoles = match?.total_holes ?? 18;
+    if (data.thru > totalHoles) throw new Error(`This match has only ${totalHoles} holes`);
+
     const now = new Date().toISOString();
     const { error } = await db
       .from("matches")
@@ -78,17 +87,22 @@ export const recordHole = createServerFn({ method: "POST" })
   })
   .handler(async ({ data }) => {
     const db = await requireScorer(data.passcode);
-    const { data: last, error: lastErr } = await db
-      .from("hole_results")
-      .select("hole_number")
-      .eq("match_id", data.matchId)
-      .order("hole_number", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    if (lastErr) throw lastErr;
+    const [matchRes, lastRes] = await Promise.all([
+      db.from("matches").select("total_holes").eq("id", data.matchId).maybeSingle(),
+      db
+        .from("hole_results")
+        .select("hole_number")
+        .eq("match_id", data.matchId)
+        .order("hole_number", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+    ]);
+    if (matchRes.error) throw matchRes.error;
+    if (lastRes.error) throw lastRes.error;
 
-    const holeNumber = (last?.hole_number ?? 0) + 1;
-    if (holeNumber > 18) throw new Error("All 18 holes recorded");
+    const totalHoles = matchRes.data?.total_holes ?? 18;
+    const holeNumber = (lastRes.data?.hole_number ?? 0) + 1;
+    if (holeNumber > totalHoles) throw new Error(`All ${totalHoles} holes recorded`);
 
     const { error } = await db
       .from("hole_results")
