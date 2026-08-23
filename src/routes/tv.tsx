@@ -5,7 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { computeMatchScore } from "@/lib/match-score";
-import { DIVISION_LABELS, DIVISION_ORDER } from "@/lib/divisions";
+import { DIVISION_LABELS, DIVISION_ORDER, championTitle } from "@/lib/divisions";
 import {
   PlayerAvatar,
   PlayerProfileProvider,
