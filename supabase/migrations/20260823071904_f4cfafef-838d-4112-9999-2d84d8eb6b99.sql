@@ -1,0 +1,1 @@
+UPDATE public.matches SET status = 'upcoming', winner = null, result_text = null, updated_at = now() WHERE id = 'm-final';

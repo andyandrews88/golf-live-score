@@ -1,13 +1,27 @@
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Instagram } from "lucide-react";
 
 import crest from "@/assets/crest.png";
+import { supabase } from "@/integrations/supabase/client";
 import { useCoursePhotos } from "@/lib/course-photos";
 import { cn } from "@/lib/utils";
-import { DIVISION_LIST_TEXT, DIVISION_TABS } from "@/lib/divisions";
+import { DIVISION_LIST_TEXT, DIVISION_TABS, championTitle } from "@/lib/divisions";
 import { fetchStimp, fetchWeather } from "@/lib/weather";
+import {
+  PlayerAvatar,
+  PlayerProfileProvider,
+  usePlayerProfile,
+} from "@/components/player-profile";
+
+function IndexPage() {
+  return (
+    <PlayerProfileProvider>
+      <Index />
+    </PlayerProfileProvider>
+  );
+}
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -28,13 +42,12 @@ export const Route = createFileRoute("/")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  component: Index,
+  component: IndexPage,
 });
 
 const PHOTO_MS = 5000;
 
 const DIVISIONS = DIVISION_TABS;
-
 
 function WeatherPanel() {
   const { data } = useQuery({
@@ -80,6 +93,87 @@ function WeatherPanel() {
   );
 }
 
+type ChampionMatch = {
+  id: string;
+  division: string;
+  round: string;
+  status: string;
+  winner: string | null;
+  p1_name: string | null;
+  p2_name: string | null;
+  sort_order: number | null;
+};
+
+function useChampions() {
+  const queryClient = useQueryClient();
+  const query = useQuery({
+    queryKey: ["home-champions"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("matches")
+        .select("id, division, round, status, winner, p1_name, p2_name, sort_order")
+        .eq("round", "Final")
+        .eq("status", "completed")
+        .order("sort_order", { ascending: true });
+      if (error) throw error;
+      return (data ?? []) as ChampionMatch[];
+    },
+  });
+
+  useEffect(() => {
+    const channel = supabase
+      .channel("home-champions")
+      .on("postgres_changes", { event: "*", schema: "public", table: "matches" }, () => {
+        queryClient.invalidateQueries({ queryKey: ["home-champions"] });
+      })
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
+
+  return query;
+}
+
+function ChampionsSection() {
+  const { data: champions } = useChampions();
+  const profile = usePlayerProfile();
+
+  if (!champions || champions.length === 0) return null;
+
+  return (
+    <section className="mx-auto mt-6 w-full max-w-3xl">
+      <h2 className="mb-3 font-headline text-xl font-bold text-foreground">Champions</h2>
+      <div className="flex gap-3 overflow-x-auto pb-2">
+        {champions.map((match) => {
+          const winnerName = match.winner === "p1" ? match.p1_name : match.p2_name;
+          if (!winnerName) return null;
+          return (
+            <button
+              key={match.id}
+              type="button"
+              onClick={() => profile?.open(winnerName)}
+              className="flex shrink-0 flex-col items-center rounded-xl border border-border bg-card p-4 text-center shadow-sm transition-colors hover:border-primary"
+            >
+              <PlayerAvatar
+                name={winnerName}
+                size="lg"
+                tone="light"
+                className="size-20 text-xl"
+              />
+              <p className="mt-3 max-w-[140px] truncate font-headline text-base font-semibold text-foreground">
+                {winnerName}
+              </p>
+              <p className="max-w-[140px] truncate text-xs text-muted-foreground">
+                {championTitle(match.division)}
+              </p>
+            </button>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
 
 function Carousel() {
   const { data } = useCoursePhotos();
@@ -172,6 +266,7 @@ function Index() {
       </header>
 
       <WeatherPanel />
+      <ChampionsSection />
       <Carousel />
 
       <section className="mx-auto mt-8 w-full max-w-3xl">
@@ -223,3 +318,4 @@ function Index() {
     </main>
   );
 }
+

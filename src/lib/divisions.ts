@@ -15,6 +15,13 @@ export function divisionLabel(division: string): string {
   return DIVISION_LABELS[division] ?? division;
 }
 
+export function championTitle(division: string): string {
+  if (division === "men") return "2026 Men's Club Champion";
+  if (division === "silver") return "2026 Ladies Club Champion";
+  if (division === "bronze") return "2026 Ladies Bronze Champion";
+  return "Champion";
+}
+
 export const DIVISION_TABS = DIVISION_ORDER.map((key) => ({
   key,
   label: DIVISION_LABELS[key]!,
