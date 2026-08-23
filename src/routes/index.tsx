@@ -15,6 +15,14 @@ import {
   usePlayerProfile,
 } from "@/components/player-profile";
 
+function IndexPage() {
+  return (
+    <PlayerProfileProvider>
+      <Index />
+    </PlayerProfileProvider>
+  );
+}
+
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
@@ -34,7 +42,7 @@ export const Route = createFileRoute("/")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  component: Index,
+  component: IndexPage,
 });
 
 const PHOTO_MS = 5000;
