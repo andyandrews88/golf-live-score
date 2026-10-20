@@ -1,7 +1,8 @@
 # Roadmap
 
 ## Open
-- Resume the paused Lovable Cloud backend and confirm it is healthy (owner-authorised).
+- (none)
 
 ## Done
 - Home page: compact "Champions" section between weather panel and photo carousel.
+- Resumed the paused Lovable Cloud backend; confirmed it is up and responding normally.
